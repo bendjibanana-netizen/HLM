@@ -47,7 +47,6 @@
             color: #fff; z-index: 100;
             border: 1px solid var(--accent-18);
         }
-        /* halo néon animé qui respire — la signature du panneau */
         #ecran-connexion::before {
             content: ""; position: absolute; inset: -2px; border-radius: 24px; z-index: -1;
             background: linear-gradient(130deg, var(--accent), transparent 40%, transparent 60%, var(--accent));
@@ -108,7 +107,6 @@
         .ligne-volume b { color: var(--accent); font-weight: 700; font-size: 13px; }
         input[type="range"] { width: 100%; cursor: pointer; margin-top: 10px; accent-color: var(--accent); }
 
-        /* Qui est en ligne */
         #bloc-en-ligne {
             display: none; text-align: left; margin-top: 16px;
             padding: 13px 15px; border-radius: 12px;
@@ -153,7 +151,6 @@
         #bouton-action:hover { transform: translateY(-2px); box-shadow: 0 8px 22px var(--accent-35); }
         #statut { font-size: 12px; color: #aaaaaa; margin-top: 13px; height: 15px; text-align: center; transition: .3s; }
 
-        /* Palette de couleurs du menu */
         #palette, .pastille-couleur, #couleur-perso { -webkit-app-region: no-drag; }
         #palette { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
         .pastille-couleur {
@@ -171,7 +168,6 @@
         #couleur-perso::-webkit-color-swatch-wrapper { padding: 0; }
         #couleur-perso::-webkit-color-swatch { border: 2px dashed rgba(255,255,255,0.45); border-radius: 50%; }
 
-        /* Champ avec bouton à droite (pseudo) */
         .champ-inline { display: flex; gap: 8px; }
         .champ-inline input { flex: 1; }
         .btn-mini {
@@ -183,7 +179,6 @@
         }
         .btn-mini:hover { background: var(--accent-15); }
 
-        /* Sélecteur visuel de zone d'apparition (= un écran) */
         .zone-picker, .zone { -webkit-app-region: no-drag; }
         .zone-picker {
             position: relative; width: 100%; height: 140px;
@@ -203,7 +198,6 @@
             background: var(--accent-35); box-shadow: 0 0 12px var(--accent-35);
         }
 
-        /* Interrupteur (Ne pas déranger) */
         .ligne-toggle {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
@@ -221,8 +215,7 @@
         .interrupteur input:checked + .curseur::before { transform: translateX(20px); }
 
         /* ============================================================
-           SPLASH — avatar cerclé vert + pseudo simple + rebond
-           (fond transparent : le bureau/jeu derrière reste visible)
+           SPLASH
         ============================================================ */
         #ecran-blague {
             display: none; align-items: center; justify-content: center;
@@ -245,11 +238,9 @@
             100% { opacity: 1; transform: translateY(0)    scale(1); }
         }
 
-        /* léger flottement (le rebond doux en continu) */
         #flotteur { display: flex; flex-direction: column; align-items: center; animation: flotte 2.8s ease-in-out infinite; }
         @keyframes flotte { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
 
-        /* En-tête auteur : avatar vert + pseudo simple */
         #entete-auteur {
             display: none; align-items: center; gap: 12px; margin-bottom: 14px;
         }
@@ -269,7 +260,6 @@
             text-shadow: 0 2px 6px rgba(0,0,0,.6);
         }
 
-        /* Média */
         #zone-media video, #zone-media img, #zone-media iframe, #zone-media canvas {
             max-width: 100%; max-height: 380px; display: block;
             border-radius: 16px;
@@ -278,7 +268,6 @@
             background: #000;
         }
 
-        /* Texte / légende */
         #texte-box {
             display: none; margin-top: 16px;
             font-size: 22px; font-weight: 700; color: #fff; text-align: center;
@@ -289,7 +278,6 @@
             max-width: 80vw;
         }
 
-        /* UI audio */
         .ui-audio {
             display: flex; align-items: center; gap: 14px;
             background: rgba(10,12,10,0.92); border: 2px solid var(--vert);
@@ -299,7 +287,6 @@
         }
         .ui-audio .icone-audio { font-size: 30px; }
 
-        /* MÉDIA LIBRE (fond vert détouré ou PNG transparent) : pas de cadre */
         #ecran-blague.media-libre #zone-media video,
         #ecran-blague.media-libre #zone-media img,
         #ecran-blague.media-libre #zone-media canvas {
@@ -307,12 +294,11 @@
             filter: drop-shadow(0 10px 20px rgba(0,0,0,.45));
         }
 
-        /* PLEIN ÉCRAN : le média couvre TOUT l'écran, bord à bord */
         #ecran-blague.plein { padding: 0; }
         #ecran-blague.plein #conteneur-media { max-width: 100%; width: 100vw; height: 100vh; }
         #ecran-blague.plein #flotteur {
             width: 100vw; height: 100vh; justify-content: center;
-            animation: none; /* pas de flottement en plein écran */
+            animation: none;
         }
         #ecran-blague.plein #zone-media { width: 100vw; height: 100vh; }
         #ecran-blague.plein #zone-media video,
@@ -320,10 +306,9 @@
         #ecran-blague.plein #zone-media iframe,
         #ecran-blague.plein #zone-media canvas {
             width: 100vw; height: 100vh; max-width: none; max-height: none;
-            object-fit: contain;        /* affiche tout le média a la bonne taille, sans zoom ni rognage */
+            object-fit: contain;
             border: none; box-shadow: none; border-radius: 0;
         }
-        /* nom et texte passent en surimpression par-dessus le média */
         #ecran-blague.plein #entete-auteur {
             position: fixed; top: 26px; left: 26px; margin: 0; z-index: 5;
         }
@@ -428,9 +413,14 @@
         let socket = null;
         let volumeChoisi = 0.5;
         let estConnecte = false;
-        let chronometreTempsMax, chronometreDisparition;
-        let fileDAttente = [];
+        
+        // === L'ARBITRE (Fin du bug "Celui qui finit premier tue l'autre") ===
+        let chronometreSecurite = null; // Stoppe l'écran de force après 60s si y a un bug
+        let chronometreImage = null;    // Compteur pour les images (7s) ou YouTube (30s)
+        let ttsEnCours = false;         // Vrai si l'IA ou Windows parle
+        let mediaEnCours = false;       // Vrai si une vidéo, un audio ou une image s'affiche
         let ecranOccupe = false;
+        let fileDAttente = [];
         let pleinActif = false;
         let boucleChroma = null;
         let couleurAccentActuelle = '#39ff14';
@@ -438,6 +428,13 @@
         let nePasDeranger = false;
         let estInactif = false;
         let audioTtsActuel = null;
+
+        // Fonction de l'arbitre : on efface l'écran seulement si TOUT est terminé
+        function verifierFin() {
+            if (!ttsEnCours && !mediaEnCours) {
+                nettoyerEcran();
+            }
+        }
 
         const PRESETS_COULEUR = ['#39ff14','#3b9dff','#b14bff','#ff4bd1','#ff7a1a','#ff3b3b','#1ad1ff','#ffd93b','#f5f5f5'];
 
@@ -502,12 +499,9 @@
             if (cp) cp.value = couleurSauvee;
 
             chargerEcrans();
-
-            // Le panneau de réglages est visible au lancement
             ipcRenderer.send('reglages-etat', true);
         });
 
-        // Remplit le menu des écrans branchés et applique le choix sauvegardé
         async function chargerEcrans() {
             try {
                 const ecrans = await ipcRenderer.invoke('lister-ecrans');
@@ -520,10 +514,9 @@
                     o.textContent = `Écran ${e.index} — ${e.largeur}×${e.hauteur}` + (e.primaire ? ' (principal)' : '');
                     sel.appendChild(o);
                 });
-                // Si l'écran sauvegardé n'existe plus (débranché), on retombe sur auto
                 sel.value = [...sel.options].some(o => o.value === choixSauve) ? choixSauve : 'auto';
                 appliquerEcranChoisi();
-            } catch (e) { /* écrans indisponibles : on garde auto */ }
+            } catch (e) {}
         }
 
         function appliquerEcranChoisi() {
@@ -538,7 +531,6 @@
             ipcRenderer.send('changer-position', positionActuelle);
         }
 
-        // Sélecteur visuel de zone
         function initZonePicker() {
             document.querySelectorAll('#zone-picker .zone').forEach(z => {
                 z.onclick = () => definirPosition(z.dataset.pos);
@@ -553,7 +545,6 @@
             ipcRenderer.send('changer-position', pos);
         }
 
-        // Renommer à chaud (sans relancer l'appli)
         function appliquerPseudo() {
             const p = document.getElementById('pseudo').value.trim() || 'Overlay';
             localStorage.setItem('pseudo', p);
@@ -563,7 +554,6 @@
             }
         }
 
-        // Ne pas déranger
         function basculerDND(actif) {
             nePasDeranger = actif;
             localStorage.setItem('dnd', actif ? '1' : '0');
@@ -662,13 +652,13 @@
             }
         });
 
-        // Inactivité (AFK)
         ipcRenderer.on('etat-inactivite', (e, inactif) => {
             estInactif = inactif;
             if (socket && estConnecte) socket.emit('etat-inactif', inactif);
         });
 
-        // Synthèse vocale de secours locale (TTS Windows)
+        // ================= VOIX & MEDIAS =================
+
         function appliquerVoix(u) {
             u.lang = 'fr-FR';
         }
@@ -676,23 +666,30 @@
         function parler(texte) {
             try {
                 window.speechSynthesis.cancel();
+                ttsEnCours = true;
                 const u = new SpeechSynthesisUtterance(texte);
                 appliquerVoix(u);
                 u.volume = volumeChoisi;
-                u.onend = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+                u.onend = () => { ttsEnCours = false; verifierFin(); };
+                u.onerror = () => { ttsEnCours = false; verifierFin(); };
                 window.speechSynthesis.speak(u);
-            } catch (err) { /* synthèse indisponible : on ignore */ }
+            } catch (err) { 
+                ttsEnCours = false; verifierFin(); 
+            }
         }
 
-        // Joue un audio de voix IA (ElevenLabs) reçu du serveur
         function jouerAudioTts(src) {
             try {
+                ttsEnCours = true;
                 const a = new Audio(src);
                 a.volume = volumeChoisi;
-                a.onended = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+                a.onended = () => { ttsEnCours = false; verifierFin(); };
+                a.onerror = () => { ttsEnCours = false; verifierFin(); };
                 audioTtsActuel = a;
-                a.play().catch(() => {});
-            } catch (e) {}
+                a.play().catch(() => { ttsEnCours = false; verifierFin(); });
+            } catch (e) {
+                ttsEnCours = false; verifierFin();
+            }
         }
 
         function lireProchaineBlague() {
@@ -708,12 +705,16 @@
         function nettoyerEcran() {
             const splash = document.getElementById('ecran-blague');
             arreterChroma();
+            clearTimeout(chronometreSecurite);
+            clearTimeout(chronometreImage);
+
             try { window.speechSynthesis.cancel(); } catch (e) {}
             if (audioTtsActuel) { try { audioTtsActuel.pause(); } catch (e) {} audioTtsActuel = null; }
+            
             document.getElementById('conteneur-media').style.opacity = '0';
             splash.classList.remove('entre');
 
-            chronometreDisparition = setTimeout(() => {
+            setTimeout(() => {
                 document.getElementById('zone-media').innerHTML = "";
                 document.getElementById('texte-box').style.display = 'none';
                 document.getElementById('entete-auteur').style.display = 'none';
@@ -741,6 +742,12 @@
             zoneMedia.innerHTML = "";
             splash.classList.remove('media-libre', 'plein');
 
+            // --- RESET DES ÉTATS ---
+            clearTimeout(chronometreSecurite);
+            clearTimeout(chronometreImage);
+            ttsEnCours = false;
+            mediaEnCours = false;
+
             const mediaLibre = !!(options.vert || options.transparent);
             if (mediaLibre) splash.classList.add('media-libre');
 
@@ -760,20 +767,29 @@
                 entete.style.display = 'none';
             }
 
-            let tempsMax = 7000;
+            // On vérifie s'il y a un TTS prévu
+            if (charge.ttsAudio || (options.tts && texte)) {
+                ttsEnCours = true;
+            }
+
+            // --- GESTION DES MÉDIAS ---
+            let aUnMediaVisuel = false;
+
             if (lienMedia) {
+                mediaEnCours = true;
+                aUnMediaVisuel = true;
                 const lienMin = lienMedia.toLowerCase();
                 const regexYoutube = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
                 const matchYoutube = lienMedia.match(regexYoutube);
 
                 if (matchYoutube && matchYoutube[1]) {
                     zoneMedia.innerHTML = `<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/${matchYoutube[1]}?autoplay=1&controls=0&rel=0&disablekb=1" allow="autoplay; encrypted-media" style="border:none;"></iframe>`;
-                    tempsMax = 30000;
+                    chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 30000);
                 }
                 else if (lienMin.match(/\.(mp3|wav|ogg)/)) {
                     zoneMedia.innerHTML = `<div class="ui-audio"><span class="icone-audio">🔊</span><span>LIVE CHAT</span><audio autoplay id="lecteur-audio" style="display:none"><source src="${lienMedia}"></audio></div>`;
-                    const l = document.getElementById('lecteur-audio'); l.volume = volumeChoisi; tempsMax = 30000;
-                    l.onended = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+                    const l = document.getElementById('lecteur-audio'); l.volume = volumeChoisi;
+                    l.onended = () => { mediaEnCours = false; verifierFin(); };
                 }
                 else if (lienMin.match(/\.(mp4|webm|mov)/)) {
                     if (options.vert) {
@@ -781,28 +797,33 @@
                     } else {
                         zoneMedia.innerHTML = `<video autoplay id="lecteur-video"><source src="${lienMedia}"></video>`;
                         const l = document.getElementById('lecteur-video'); l.volume = volumeChoisi;
-                        l.onended = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+                        l.onended = () => { mediaEnCours = false; verifierFin(); };
                     }
-                    tempsMax = 30000;
                 }
-                else {
+                else { // Images ou GIFs
                     if (options.vert) {
                         afficherImageFondVert(lienMedia, zoneMedia);
                     } else {
                         zoneMedia.innerHTML = `<img src="${lienMedia}">`;
                     }
-                    tempsMax = 7000;
+                    chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 7000);
                 }
             }
 
+            // S'il n'y a NI média visuel NI voix, mais juste un texte, on le garde 7 secondes
+            if (!aUnMediaVisuel && !ttsEnCours && texte) {
+                mediaEnCours = true;
+                chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 7000);
+            }
+
+            // Texte à afficher
             if (texte) { elTexte.innerText = texte; elTexte.style.display = 'inline-block'; }
             else { elTexte.style.display = 'none'; }
 
+            // Lancement du TTS
             if (charge.ttsAudio) {
-                tempsMax = Math.max(tempsMax, 60000);
                 jouerAudioTts(charge.ttsAudio);
             } else if (options.tts && texte) {
-                tempsMax = Math.max(tempsMax, 60000);
                 parler(texte);
             }
 
@@ -810,7 +831,8 @@
             void splash.offsetWidth;
             splash.classList.add('entre');
 
-            chronometreTempsMax = setTimeout(() => { nettoyerEcran(); }, tempsMax);
+            // Sécurité anti-bug absolue : quoi qu'il arrive, l'écran s'efface de force après 60 secondes maximum
+            chronometreSecurite = setTimeout(() => { nettoyerEcran(); }, 60000);
         }
 
         // ====== CHROMA KEY (retire le vert) ======
@@ -835,7 +857,9 @@
             zoneMedia.appendChild(video); zoneMedia.appendChild(canvas);
 
             video.onloadeddata = () => { canvas.width = video.videoWidth; canvas.height = video.videoHeight; dessiner(); };
-            video.onended = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+            
+            // LA CORRECTION EST ICI AUSSI POUR LE FOND VERT
+            video.onended = () => { mediaEnCours = false; verifierFin(); };
 
             function dessiner() {
                 if (video.paused || video.ended) { boucleChroma = requestAnimationFrame(dessiner); return; }
