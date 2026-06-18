@@ -14,7 +14,7 @@ const http = require('http');
 //  Exemple GitHub : "https://raw.githubusercontent.com/TonPseudo/HLM/main"
 //  (laisse la valeur "DESACTIVE" pour ne pas utiliser la maj auto)
 // =========================================================
-const URL_MAJ = "DESACTIVE";
+const URL_MAJ = "https://raw.githubusercontent.com/bendjibanana-netizen/HLM/main";
 
 function telecharger(url, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
