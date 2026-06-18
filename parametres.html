@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+        :root { --vert:#39ff14; --fond:#0c0f0c; }
+        body { font-family:'Poppins',sans-serif; background:var(--fond); color:#fff; padding:24px; margin:0; }
+        h2 {
+            font-family:'Space Grotesk'; letter-spacing:2px; text-transform:uppercase;
+            font-size:24px; margin:0 0 22px; display:flex; align-items:center; gap:10px;
+        }
+        h2 .dot { width:13px; height:13px; border-radius:50%; background:var(--vert); box-shadow:0 0 14px var(--vert); }
+        .bloc {
+            background:rgba(14,18,14,.9); padding:16px 18px; border-radius:14px; margin-bottom:16px;
+            border:1px solid rgba(57,255,20,.15);
+        }
+        label {
+            font-family:'Space Grotesk'; font-size:11px; font-weight:600; letter-spacing:1.5px;
+            text-transform:uppercase; color:var(--vert); display:block;
+        }
+        .valeur { float:right; color:var(--vert); font-weight:700; }
+        select { width:100%; margin-top:12px; padding:11px; border-radius:10px; background:#000; color:#fff; border:1px solid rgba(255,255,255,.12); }
+        select:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px rgba(57,255,20,.15); }
+        input[type="range"] { width:100%; margin-top:14px; accent-color:var(--vert); cursor:pointer; }
+    </style>
+</head>
+<body>
+    <h2><span class="dot"></span> Paramètres</h2>
+
+    <div class="bloc">
+        <label>📍 Zone d'apparition</label>
+        <select id="choix-position" onchange="sauvegarder()">
+            <option value="centre">Au milieu</option>
+            <option value="haut-gauche">En haut à gauche</option>
+            <option value="haut-droite">En haut à droite</option>
+            <option value="haut-centre">En haut au milieu</option>
+            <option value="bas-gauche">En bas à gauche</option>
+            <option value="bas-droite">En bas à droite</option>
+            <option value="bas-centre">En bas au milieu</option>
+        </select>
+    </div>
+
+    <div class="bloc">
+        <label>🔊 Volume des médias <span class="valeur" id="valeur">100%</span></label>
+        <input type="range" id="choix-volume" min="0" max="100" value="100"
+               oninput="document.getElementById('valeur').innerText=this.value+'%'; sauvegarder()">
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        function sauvegarder() {
+            ipcRenderer.send('nouveaux-parametres', {
+                position: document.getElementById('choix-position').value,
+                volume:   document.getElementById('choix-volume').value
+            });
+        }
+    </script>
+</body>
+</html>

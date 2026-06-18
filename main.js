@@ -1,0 +1,257 @@
+const { app, BrowserWindow, ipcMain, Tray, Menu, screen, nativeImage, powerMonitor } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
+
+// =========================================================
+//  MISE À JOUR AUTOMATIQUE
+//  Au lancement, l'app compare sa version à celle en ligne.
+//  Si une version plus récente existe, elle télécharge les
+//  fichiers, les remplace et se relance. Sinon elle démarre.
+//
+//  >>> Mets ici l'adresse où tu publies les mises à jour <<<
+//  Exemple GitHub : "https://raw.githubusercontent.com/TonPseudo/HLM/main"
+//  (laisse la valeur "DESACTIVE" pour ne pas utiliser la maj auto)
+// =========================================================
+const URL_MAJ = "https://raw.githubusercontent.com/bendjibanana-netizen/HLM/main";
+
+function telecharger(url, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+        const lib = url.startsWith('https') ? https : http;
+        const req = lib.get(url, (res) => {
+            if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
+            let data = '';
+            res.setEncoding('utf8');
+            res.on('data', c => data += c);
+            res.on('end', () => resolve(data));
+        });
+        req.on('error', reject);
+        req.setTimeout(timeoutMs, () => req.destroy(new Error('timeout')));
+    });
+}
+
+async function verifierMiseAJour() {
+    if (!URL_MAJ || URL_MAJ === 'DESACTIVE' || URL_MAJ.includes('TonPseudo')) return;
+    try {
+        const manifeste = JSON.parse(await telecharger(URL_MAJ + '/version.json'));
+
+        let versionLocale = 0;
+        try {
+            versionLocale = JSON.parse(fs.readFileSync(path.join(__dirname, 'version.json'), 'utf8')).version || 0;
+        } catch (e) { /* pas de version locale -> 0 */ }
+
+        if (!(manifeste.version > versionLocale)) return; // déjà à jour
+
+        const fichiers = manifeste.fichiers || [];
+        // 1) on télécharge TOUT en mémoire d'abord (pour ne rien casser si la connexion coupe)
+        const contenus = {};
+        for (const f of fichiers) {
+            contenus[f] = await telecharger(URL_MAJ + '/' + f);
+        }
+        // 2) on écrit les fichiers
+        for (const f of fichiers) {
+            fs.writeFileSync(path.join(__dirname, f), contenus[f]);
+        }
+        // 3) on mémorise la nouvelle version
+        fs.writeFileSync(path.join(__dirname, 'version.json'), JSON.stringify({ version: manifeste.version }));
+
+        // 4) on relance l'app avec la nouvelle version
+        app.relaunch();
+        app.exit(0);
+    } catch (e) {
+        // hors ligne ou erreur : on démarre simplement la version actuelle
+    }
+}
+
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
+let fenetre;
+let tray;
+
+// Taille "normale" de l'overlay (hors plein écran)
+const TAILLE_NORMALE = { width: 600, height: 700 };
+let dernierePosition = 'centre';
+let ecranChoisiId = null; // null = écran principal (auto)
+
+// Renvoie l'écran choisi par l'utilisateur, sinon l'écran principal
+function ecranActif() {
+    if (ecranChoisiId !== null) {
+        const trouve = screen.getAllDisplays().find(d => d.id === ecranChoisiId);
+        if (trouve) return trouve;
+    }
+    return screen.getPrimaryDisplay();
+}
+
+function creerEcran() {
+    // Hauteur adaptée : assez grande pour voir tous les réglages, mais jamais
+    // plus que la zone de travail de l'écran (sinon le haut/bas sort de l'écran).
+    const dispo = screen.getPrimaryDisplay().workAreaSize;
+    TAILLE_NORMALE.height = Math.min(880, dispo.height - 40);
+
+    fenetre = new BrowserWindow({
+        width: TAILLE_NORMALE.width,
+        height: TAILLE_NORMALE.height,
+        transparent: true,
+        frame: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        type: 'toolbar',
+        minimizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            webSecurity: false // nécessaire pour lire les pixels des vidéos (fond vert)
+        }
+    });
+
+    fenetre.loadFile('index.html');
+
+    // Le bouclier classique
+    fenetre.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    fenetre.setAlwaysOnTop(true, 'screen-saver');
+
+    // === CHIEN DE GARDE ANTI-BUG WINDOWS ===
+    setInterval(() => {
+        if (fenetre && !fenetre.isDestroyed()) {
+            fenetre.setAlwaysOnTop(true, 'screen-saver');
+            if (!fenetre.isVisible()) {
+                fenetre.showInactive();
+            }
+        }
+    }, 2000);
+
+    // === DÉTECTION D'INACTIVITÉ (AFK) ===
+    // Temps depuis la dernière action souris/clavier au niveau système.
+    const SEUIL_INACTIF = 300; // secondes (5 min) avant d'être marqué "inactif"
+    let dernierInactif = null;
+    setInterval(() => {
+        if (!fenetre || fenetre.isDestroyed()) return;
+        let idle = 0;
+        try { idle = powerMonitor.getSystemIdleTime(); } catch (e) { return; }
+        const inactif = idle >= SEUIL_INACTIF;
+        if (inactif !== dernierInactif) {
+            dernierInactif = inactif;
+            fenetre.webContents.send('etat-inactivite', inactif);
+        }
+    }, 15000);
+
+    // --- Clics qui traversent l'overlay ---
+    ipcMain.on('clic-traversant', (event, ignorer) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        win.setIgnoreMouseEvents(ignorer, { forward: true });
+    });
+
+    // --- Placement de la fenêtre selon la zone choisie, sur l'écran choisi ---
+    function placerFenetre(position) {
+        dernierePosition = position;
+        const za = ecranActif().workArea; // {x, y, width, height} de l'écran choisi
+        const f = fenetre.getBounds();
+        let x = za.x, y = za.y;
+
+        switch (position) {
+            case 'haut-gauche':  x = za.x;                            y = za.y; break;
+            case 'haut-droite':  x = za.x + za.width - f.width;       y = za.y; break;
+            case 'bas-gauche':   x = za.x;                            y = za.y + za.height - f.height; break;
+            case 'bas-droite':   x = za.x + za.width - f.width;       y = za.y + za.height - f.height; break;
+            case 'haut-centre':  x = za.x + Math.round((za.width - f.width) / 2);  y = za.y; break;
+            case 'bas-centre':   x = za.x + Math.round((za.width - f.width) / 2);  y = za.y + za.height - f.height; break;
+            case 'centre':
+            default:
+                x = za.x + Math.round((za.width - f.width) / 2);
+                y = za.y + Math.round((za.height - f.height) / 2);
+                break;
+        }
+        fenetre.setPosition(x, y);
+    }
+
+    ipcMain.on('changer-position', (event, position) => {
+        placerFenetre(position);
+    });
+
+    // --- Liste des écrans branchés (pour le menu des réglages) ---
+    ipcMain.handle('lister-ecrans', () => {
+        const idPrincipal = screen.getPrimaryDisplay().id;
+        return screen.getAllDisplays().map((d, i) => ({
+            id: d.id,
+            index: i + 1,
+            largeur: d.size.width,
+            hauteur: d.size.height,
+            primaire: d.id === idPrincipal
+        }));
+    });
+
+    // --- Choix de l'écran d'affichage ---
+    ipcMain.on('choisir-ecran', (event, id) => {
+        ecranChoisiId = (id === null || id === undefined) ? null : id;
+        placerFenetre(dernierePosition);
+    });
+
+    // --- Mode plein écran (couvre tout l'écran choisi) ---
+    ipcMain.on('mode-plein-ecran', (event, actif) => {
+        if (actif) {
+            const b = ecranActif().bounds; // tout l'écran choisi, barre des tâches comprise
+            fenetre.setBounds({ x: b.x, y: b.y, width: b.width, height: b.height });
+        } else {
+            fenetre.setBounds({
+                x: 0, y: 0,
+                width: TAILLE_NORMALE.width,
+                height: TAILLE_NORMALE.height
+            });
+            placerFenetre(dernierePosition);
+        }
+        fenetre.setAlwaysOnTop(true, 'screen-saver');
+    });
+
+    // --- Relais des réglages venant de parametres.html (fenêtre séparée éventuelle) ---
+    ipcMain.on('nouveaux-parametres', (event, reglages) => {
+        if (fenetre && !fenetre.isDestroyed()) {
+            fenetre.webContents.send('appliquer-parametres', reglages);
+        }
+    });
+
+    fenetre.on('minimize', (event) => {
+        event.preventDefault();
+        setTimeout(() => {
+            fenetre.restore();
+            fenetre.setAlwaysOnTop(true, 'screen-saver');
+        }, 10);
+    });
+
+    // --- Icône dans la barre système ---
+    try {
+        const cheminLogo = path.join(__dirname, 'logo.png');
+        const icon = nativeImage.createFromPath(cheminLogo);
+        tray = new Tray(icon);
+    } catch (erreur) {
+        tray = new Tray(nativeImage.createEmpty());
+    }
+
+    tray.setToolTip('Live Chat - Réglages');
+
+    tray.on('click', () => {
+        fenetre.webContents.send('afficher-reglages');
+        fenetre.setAlwaysOnTop(true, 'screen-saver');
+    });
+
+    const menuClicDroit = Menu.buildFromTemplate([
+        { label: 'Ouvrir les réglages', click: () => {
+            fenetre.webContents.send('afficher-reglages');
+            fenetre.setAlwaysOnTop(true, 'screen-saver');
+        }},
+        { type: 'separator' },
+        { label: 'Quitter Live Chat', click: () => app.quit() }
+    ]);
+    tray.setContextMenu(menuClicDroit);
+}
+
+app.whenReady().then(async () => {
+    await verifierMiseAJour(); // si une maj est appliquée, l'app se relance ici
+    creerEcran();
+});
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
