@@ -340,7 +340,6 @@
 </head>
 <body>
 
-    <!-- ===================== RÉGLAGES ===================== -->
     <div id="ecran-connexion">
         <div class="entete-reglages">
             <div class="logo-pastille"></div>
@@ -388,14 +387,6 @@
         </div>
 
         <div class="champ">
-            <label>Voix de lecture (TTS)</label>
-            <div class="champ-inline">
-                <select id="choix-voix" onchange="definirVoix(this.value)"></select>
-                <button class="btn-mini" onclick="testerVoix()">Test</button>
-            </div>
-        </div>
-
-        <div class="champ">
             <div class="ligne-toggle">
                 <span>🔕 Ne pas déranger</span>
                 <label class="interrupteur">
@@ -419,7 +410,6 @@
         <div id="statut"></div>
     </div>
 
-    <!-- ===================== SPLASH ===================== -->
     <div id="ecran-blague">
         <div id="conteneur-media">
             <div id="flotteur">
@@ -447,7 +437,6 @@
         let positionActuelle = 'centre';
         let nePasDeranger = false;
         let estInactif = false;
-        let voixChoisie = '';
         let audioTtsActuel = null;
 
         const PRESETS_COULEUR = ['#39ff14','#3b9dff','#b14bff','#ff4bd1','#ff7a1a','#ff3b3b','#1ad1ff','#ffd93b','#f5f5f5'];
@@ -513,12 +502,6 @@
             if (cp) cp.value = couleurSauvee;
 
             chargerEcrans();
-
-            voixChoisie = localStorage.getItem('voix') || '';
-            chargerVoix();
-            if (typeof window.speechSynthesis !== 'undefined') {
-                window.speechSynthesis.onvoiceschanged = chargerVoix;
-            }
 
             // Le panneau de réglages est visible au lancement
             ipcRenderer.send('reglages-etat', true);
@@ -638,7 +621,6 @@
             socket.on('liste-utilisateurs', (liste) => {
                 document.getElementById('compteur-en-ligne').innerText = liste.length + " en ligne";
                 document.getElementById('liste-pseudos').innerHTML = liste.map(u => {
-                    // compat : ancien format (chaîne) ou nouveau format {nom, dnd, inactif}
                     const nom = (typeof u === 'string') ? u : u.nom;
                     const dnd = (typeof u === 'object') && u.dnd;
                     const afk = (typeof u === 'object') && u.inactif;
@@ -650,7 +632,7 @@
             });
 
             socket.on('nouvelle-blague', (charge) => {
-                if (nePasDeranger) return; // mode Ne pas déranger : on ignore
+                if (nePasDeranger) return;
                 if (typeof charge === 'string') charge = { lienMedia: charge, texte: arguments[1] || '', options: {}, auteur: null };
                 fileDAttente.push(charge);
                 lireProchaineBlague();
@@ -680,19 +662,15 @@
             }
         });
 
-        // Inactivité (AFK) reçue depuis le process principal
+        // Inactivité (AFK)
         ipcRenderer.on('etat-inactivite', (e, inactif) => {
             estInactif = inactif;
             if (socket && estConnecte) socket.emit('etat-inactif', inactif);
         });
 
-        // Synthèse vocale (TTS)
+        // Synthèse vocale de secours locale (TTS Windows)
         function appliquerVoix(u) {
             u.lang = 'fr-FR';
-            if (voixChoisie) {
-                const v = window.speechSynthesis.getVoices().find(x => x.voiceURI === voixChoisie);
-                if (v) { u.voice = v; u.lang = v.lang; }
-            }
         }
 
         function parler(texte) {
@@ -701,40 +679,9 @@
                 const u = new SpeechSynthesisUtterance(texte);
                 appliquerVoix(u);
                 u.volume = volumeChoisi;
-                u.rate = 1; u.pitch = 1;
                 u.onend = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
                 window.speechSynthesis.speak(u);
             } catch (err) { /* synthèse indisponible : on ignore */ }
-        }
-
-        function chargerVoix() {
-            const sel = document.getElementById('choix-voix');
-            if (!sel) return;
-            const voix = window.speechSynthesis.getVoices().slice();
-            // on met les voix françaises en premier
-            voix.sort((a, b) => {
-                const fa = a.lang.toLowerCase().startsWith('fr') ? 0 : 1;
-                const fb = b.lang.toLowerCase().startsWith('fr') ? 0 : 1;
-                return fa - fb || a.name.localeCompare(b.name);
-            });
-            sel.innerHTML = '<option value="">Voix par défaut</option>' +
-                voix.map(v => `<option value="${echapper(v.voiceURI)}">${echapper(v.name)} (${v.lang})</option>`).join('');
-            sel.value = voixChoisie || '';
-        }
-
-        function definirVoix(uri) {
-            voixChoisie = uri;
-            localStorage.setItem('voix', uri);
-        }
-
-        function testerVoix() {
-            try {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance("Ceci est un test de la voix sélectionnée.");
-                appliquerVoix(u);
-                u.volume = volumeChoisi || 1;
-                window.speechSynthesis.speak(u);
-            } catch (e) {}
         }
 
         // Joue un audio de voix IA (ElevenLabs) reçu du serveur
@@ -794,11 +741,9 @@
             zoneMedia.innerHTML = "";
             splash.classList.remove('media-libre', 'plein');
 
-            // Fond vert OU transparent -> média sans cadre
             const mediaLibre = !!(options.vert || options.transparent);
             if (mediaLibre) splash.classList.add('media-libre');
 
-            // Plein écran
             if (options.plein) {
                 splash.classList.add('plein');
                 pleinActif = true;
@@ -807,17 +752,14 @@
                 changerPosition();
             }
 
-            // En-tête auteur (avatar vert + pseudo simple)
             if (auteur && auteur.avatar) {
                 avatar.innerHTML = `<img src="${auteur.avatar}" alt="">`;
                 nom.innerText = auteur.nom;
                 entete.style.display = 'inline-flex';
             } else {
-                // anonyme : on n'affiche ni avatar ni nom, juste le contenu
                 entete.style.display = 'none';
             }
 
-            // Le média
             let tempsMax = 7000;
             if (lienMedia) {
                 const lienMin = lienMedia.toLowerCase();
@@ -844,7 +786,6 @@
                     tempsMax = 30000;
                 }
                 else {
-                    // image
                     if (options.vert) {
                         afficherImageFondVert(lienMedia, zoneMedia);
                     } else {
@@ -854,20 +795,17 @@
                 }
             }
 
-            // Texte
             if (texte) { elTexte.innerText = texte; elTexte.style.display = 'inline-block'; }
             else { elTexte.style.display = 'none'; }
 
-            // Lecture vocale (TTS) : on garde l'écran tant que ça parle
             if (charge.ttsAudio) {
                 tempsMax = Math.max(tempsMax, 60000);
-                jouerAudioTts(charge.ttsAudio);   // voix IA (ElevenLabs)
+                jouerAudioTts(charge.ttsAudio);
             } else if (options.tts && texte) {
-                tempsMax = Math.max(tempsMax, 60000); // sécurité ; le vrai arrêt vient de la fin de la voix
-                parler(texte);                    // repli : voix locale Windows
+                tempsMax = Math.max(tempsMax, 60000);
+                parler(texte);
             }
 
-            // Animation d'entrée (rebond)
             document.getElementById('conteneur-media').style.opacity = '1';
             void splash.offsetWidth;
             splash.classList.add('entre');
@@ -875,7 +813,7 @@
             chronometreTempsMax = setTimeout(() => { nettoyerEcran(); }, tempsMax);
         }
 
-        // ====== CHROMA KEY (retire le vert) — pixels verts -> transparents ======
+        // ====== CHROMA KEY (retire le vert) ======
         function estVert(r, g, b) { return g > 90 && g > r * 1.35 && g > b * 1.35; }
 
         function detourerCanvas(ctx, w, h) {
