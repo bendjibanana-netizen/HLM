@@ -448,6 +448,7 @@
         let nePasDeranger = false;
         let estInactif = false;
         let voixChoisie = '';
+        let audioTtsActuel = null;
 
         const PRESETS_COULEUR = ['#39ff14','#3b9dff','#b14bff','#ff4bd1','#ff7a1a','#ff3b3b','#1ad1ff','#ffd93b','#f5f5f5'];
 
@@ -518,6 +519,9 @@
             if (typeof window.speechSynthesis !== 'undefined') {
                 window.speechSynthesis.onvoiceschanged = chargerVoix;
             }
+
+            // Le panneau de réglages est visible au lancement
+            ipcRenderer.send('reglages-etat', true);
         });
 
         // Remplit le menu des écrans branchés et applique le choix sauvegardé
@@ -656,10 +660,12 @@
         function cacherMenuReglages() {
             document.getElementById('ecran-connexion').style.display = 'none';
             ipcRenderer.send('clic-traversant', true);
+            ipcRenderer.send('reglages-etat', false);
         }
 
         ipcRenderer.on('afficher-reglages', () => {
             ipcRenderer.send('clic-traversant', false);
+            ipcRenderer.send('reglages-etat', true);
             document.getElementById('ecran-connexion').style.display = 'block';
             chargerEcrans();
         });
@@ -731,6 +737,17 @@
             } catch (e) {}
         }
 
+        // Joue un audio de voix IA (ElevenLabs) reçu du serveur
+        function jouerAudioTts(src) {
+            try {
+                const a = new Audio(src);
+                a.volume = volumeChoisi;
+                a.onended = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
+                audioTtsActuel = a;
+                a.play().catch(() => {});
+            } catch (e) {}
+        }
+
         function lireProchaineBlague() {
             if (ecranOccupe || fileDAttente.length === 0) return;
             ecranOccupe = true;
@@ -745,6 +762,7 @@
             const splash = document.getElementById('ecran-blague');
             arreterChroma();
             try { window.speechSynthesis.cancel(); } catch (e) {}
+            if (audioTtsActuel) { try { audioTtsActuel.pause(); } catch (e) {} audioTtsActuel = null; }
             document.getElementById('conteneur-media').style.opacity = '0';
             splash.classList.remove('entre');
 
@@ -841,9 +859,12 @@
             else { elTexte.style.display = 'none'; }
 
             // Lecture vocale (TTS) : on garde l'écran tant que ça parle
-            if (options.tts && texte) {
+            if (charge.ttsAudio) {
+                tempsMax = Math.max(tempsMax, 60000);
+                jouerAudioTts(charge.ttsAudio);   // voix IA (ElevenLabs)
+            } else if (options.tts && texte) {
                 tempsMax = Math.max(tempsMax, 60000); // sécurité ; le vrai arrêt vient de la fin de la voix
-                parler(texte);
+                parler(texte);                    // repli : voix locale Windows
             }
 
             // Animation d'entrée (rebond)
