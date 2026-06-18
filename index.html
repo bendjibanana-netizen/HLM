@@ -388,6 +388,14 @@
         </div>
 
         <div class="champ">
+            <label>Voix de lecture (TTS)</label>
+            <div class="champ-inline">
+                <select id="choix-voix" onchange="definirVoix(this.value)"></select>
+                <button class="btn-mini" onclick="testerVoix()">Test</button>
+            </div>
+        </div>
+
+        <div class="champ">
             <div class="ligne-toggle">
                 <span>🔕 Ne pas déranger</span>
                 <label class="interrupteur">
@@ -439,6 +447,7 @@
         let positionActuelle = 'centre';
         let nePasDeranger = false;
         let estInactif = false;
+        let voixChoisie = '';
 
         const PRESETS_COULEUR = ['#39ff14','#3b9dff','#b14bff','#ff4bd1','#ff7a1a','#ff3b3b','#1ad1ff','#ffd93b','#f5f5f5'];
 
@@ -503,6 +512,12 @@
             if (cp) cp.value = couleurSauvee;
 
             chargerEcrans();
+
+            voixChoisie = localStorage.getItem('voix') || '';
+            chargerVoix();
+            if (typeof window.speechSynthesis !== 'undefined') {
+                window.speechSynthesis.onvoiceschanged = chargerVoix;
+            }
         });
 
         // Remplit le menu des écrans branchés et applique le choix sauvegardé
@@ -666,16 +681,54 @@
         });
 
         // Synthèse vocale (TTS)
+        function appliquerVoix(u) {
+            u.lang = 'fr-FR';
+            if (voixChoisie) {
+                const v = window.speechSynthesis.getVoices().find(x => x.voiceURI === voixChoisie);
+                if (v) { u.voice = v; u.lang = v.lang; }
+            }
+        }
+
         function parler(texte) {
             try {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(texte);
-                u.lang = 'fr-FR';
+                appliquerVoix(u);
                 u.volume = volumeChoisi;
                 u.rate = 1; u.pitch = 1;
                 u.onend = () => { clearTimeout(chronometreTempsMax); nettoyerEcran(); };
                 window.speechSynthesis.speak(u);
             } catch (err) { /* synthèse indisponible : on ignore */ }
+        }
+
+        function chargerVoix() {
+            const sel = document.getElementById('choix-voix');
+            if (!sel) return;
+            const voix = window.speechSynthesis.getVoices().slice();
+            // on met les voix françaises en premier
+            voix.sort((a, b) => {
+                const fa = a.lang.toLowerCase().startsWith('fr') ? 0 : 1;
+                const fb = b.lang.toLowerCase().startsWith('fr') ? 0 : 1;
+                return fa - fb || a.name.localeCompare(b.name);
+            });
+            sel.innerHTML = '<option value="">Voix par défaut</option>' +
+                voix.map(v => `<option value="${echapper(v.voiceURI)}">${echapper(v.name)} (${v.lang})</option>`).join('');
+            sel.value = voixChoisie || '';
+        }
+
+        function definirVoix(uri) {
+            voixChoisie = uri;
+            localStorage.setItem('voix', uri);
+        }
+
+        function testerVoix() {
+            try {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance("Ceci est un test de la voix sélectionnée.");
+                appliquerVoix(u);
+                u.volume = volumeChoisi || 1;
+                window.speechSynthesis.speak(u);
+            } catch (e) {}
         }
 
         function lireProchaineBlague() {
