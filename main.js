@@ -14,7 +14,7 @@ const http = require('http');
 //  Exemple GitHub : "https://raw.githubusercontent.com/TonPseudo/HLM/main"
 //  (laisse la valeur "DESACTIVE" pour ne pas utiliser la maj auto)
 // =========================================================
-const URL_MAJ = "https://raw.githubusercontent.com/bendjibanana-netizen/HLM/main";
+const URL_MAJ = "DESACTIVE";
 
 function telecharger(url, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
@@ -73,6 +73,7 @@ let tray;
 const TAILLE_NORMALE = { width: 600, height: 700 };
 let dernierePosition = 'centre';
 let ecranChoisiId = null; // null = écran principal (auto)
+let reglagesOuverts = false; // vrai quand le panneau de réglages est ouvert
 
 // Renvoie l'écran choisi par l'utilisateur, sinon l'écran principal
 function ecranActif() {
@@ -114,6 +115,9 @@ function creerEcran() {
     // === CHIEN DE GARDE ANTI-BUG WINDOWS ===
     setInterval(() => {
         if (fenetre && !fenetre.isDestroyed()) {
+            // Quand les réglages sont ouverts, on ne ré-applique pas alwaysOnTop :
+            // sinon ça referme les menus déroulants (choix de voix, d'écran...).
+            if (reglagesOuverts) return;
             fenetre.setAlwaysOnTop(true, 'screen-saver');
             if (!fenetre.isVisible()) {
                 fenetre.showInactive();
@@ -140,6 +144,11 @@ function creerEcran() {
     ipcMain.on('clic-traversant', (event, ignorer) => {
         const win = BrowserWindow.fromWebContents(event.sender);
         win.setIgnoreMouseEvents(ignorer, { forward: true });
+    });
+
+    // --- État d'ouverture des réglages (pour calmer le chien de garde) ---
+    ipcMain.on('reglages-etat', (event, ouvert) => {
+        reglagesOuverts = !!ouvert;
     });
 
     // --- Placement de la fenêtre selon la zone choisie, sur l'écran choisi ---
