@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, screen, nativeImage, powerMonitor } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, screen, nativeImage, powerMonitor, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -72,6 +72,8 @@ let tray;
 // Taille "normale" de l'overlay (hors plein écran)
 const TAILLE_NORMALE = { width: 600, height: 700 };
 let dernierePosition = 'centre';
+let libreActif = false;       // true = position libre (glissée), false = zone nommée
+let posFx = 0.5, posFy = 0.5; // coordonnées normalisées (0..1) pour la position libre
 let ecranChoisiId = null; // null = écran principal (auto)
 let reglagesOuverts = false; // vrai quand le panneau de réglages est ouvert
 
@@ -102,7 +104,8 @@ function creerEcran() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            webSecurity: false // nécessaire pour lire les pixels des vidéos (fond vert)
+            webSecurity: false, // nécessaire pour lire les pixels des vidéos (fond vert)
+            autoplayPolicy: 'no-user-gesture-required' // son auto + analyse audio sans clic
         }
     });
 
@@ -174,8 +177,30 @@ function creerEcran() {
         fenetre.setPosition(x, y);
     }
 
+    // Placement libre : coordonnées normalisées (0..1) dans la zone de travail
+    function placerLibre() {
+        const za = ecranActif().workArea;
+        const f = fenetre.getBounds();
+        const x = Math.round(za.x + posFx * (za.width  - f.width));
+        const y = Math.round(za.y + posFy * (za.height - f.height));
+        fenetre.setPosition(x, y);
+    }
+
+    // Replace la fenêtre selon le mode courant (libre ou zone nommée)
+    function replacer() {
+        if (libreActif) placerLibre();
+        else placerFenetre(dernierePosition);
+    }
+
     ipcMain.on('changer-position', (event, position) => {
+        libreActif = false;
         placerFenetre(position);
+    });
+
+    ipcMain.on('position-libre', (event, coords) => {
+        libreActif = true;
+        if (coords && typeof coords.fx === 'number') { posFx = coords.fx; posFy = coords.fy; }
+        placerLibre();
     });
 
     // --- Liste des écrans branchés (pour le menu des réglages) ---
@@ -193,7 +218,7 @@ function creerEcran() {
     // --- Choix de l'écran d'affichage ---
     ipcMain.on('choisir-ecran', (event, id) => {
         ecranChoisiId = (id === null || id === undefined) ? null : id;
-        placerFenetre(dernierePosition);
+        replacer();
     });
 
     // --- Mode plein écran (couvre tout l'écran choisi) ---
@@ -207,7 +232,7 @@ function creerEcran() {
                 width: TAILLE_NORMALE.width,
                 height: TAILLE_NORMALE.height
             });
-            placerFenetre(dernierePosition);
+            replacer();
         }
         fenetre.setAlwaysOnTop(true, 'screen-saver');
     });
@@ -252,11 +277,25 @@ function creerEcran() {
         { label: 'Quitter Live Chat', click: () => app.quit() }
     ]);
     tray.setContextMenu(menuClicDroit);
+
+    // --- Raccourci clavier global : touche Inser pour ouvrir/fermer les réglages ---
+    try {
+        globalShortcut.register('Insert', () => {
+            if (fenetre && !fenetre.isDestroyed()) {
+                fenetre.webContents.send('basculer-reglages');
+                fenetre.setAlwaysOnTop(true, 'screen-saver');
+            }
+        });
+    } catch (e) { /* raccourci indisponible */ }
 }
 
 app.whenReady().then(async () => {
     await verifierMiseAJour(); // si une maj est appliquée, l'app se relance ici
     creerEcran();
+});
+
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
 });
 
 app.on('window-all-closed', () => {
