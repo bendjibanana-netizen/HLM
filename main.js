@@ -278,15 +278,26 @@ function creerEcran() {
     ]);
     tray.setContextMenu(menuClicDroit);
 
-    // --- Raccourci clavier global : touche Inser pour ouvrir/fermer les réglages ---
-    try {
-        globalShortcut.register('Insert', () => {
-            if (fenetre && !fenetre.isDestroyed()) {
-                fenetre.webContents.send('basculer-reglages');
-                fenetre.setAlwaysOnTop(true, 'screen-saver');
-            }
-        });
-    } catch (e) { /* raccourci indisponible */ }
+    // --- Raccourci clavier global (par défaut Inser), personnalisable ---
+    let raccourciToggle = null;
+    function actionToggle() {
+        if (fenetre && !fenetre.isDestroyed()) {
+            fenetre.webContents.send('basculer-reglages');
+            fenetre.setAlwaysOnTop(true, 'screen-saver');
+        }
+    }
+    function enregistrerToggle(acc) {
+        if (!acc) return false;
+        if (raccourciToggle) { try { globalShortcut.unregister(raccourciToggle); } catch (e) {} }
+        let ok = false;
+        try { ok = globalShortcut.register(acc, actionToggle); } catch (e) { ok = false; }
+        if (ok) { raccourciToggle = acc; return true; }
+        // échec (touche déjà prise) : on remet l'ancien raccourci
+        if (raccourciToggle) { try { globalShortcut.register(raccourciToggle, actionToggle); } catch (e) {} }
+        return false;
+    }
+    enregistrerToggle('Insert');
+    ipcMain.handle('definir-raccourci', (e, acc) => enregistrerToggle(acc));
 }
 
 app.whenReady().then(async () => {
