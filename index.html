@@ -244,7 +244,7 @@
         #couleur-perso::-webkit-color-swatch { border: 2px dashed rgba(255,255,255,0.45); border-radius: 50%; }
 
         .champ-inline { display: flex; gap: 8px; }
-        .champ-inline input { flex: 1; }
+        .champ-inline input, .champ-inline select { flex: 1; min-width: 0; }
         .btn-mini {
             -webkit-app-region: no-drag;
             padding: 0 16px; border-radius: 10px; cursor: pointer;
@@ -367,6 +367,18 @@
         }
         #ecran-connexion.fermeture { animation: fermetureMenu .28s cubic-bezier(.4,0,1,1) forwards; }
 
+        /* ===== Bouton réinitialiser ===== */
+        #pied-reglages { text-align: center; margin-top: 10px; }
+        .lien-reset {
+            -webkit-app-region: no-drag;
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,0.4); font-family: 'Poppins', sans-serif;
+            font-size: 12px; font-weight: 500; padding: 6px 10px; border-radius: 8px;
+            transition: all .2s ease;
+        }
+        .lien-reset:hover { color: #ff6b6b; background: rgba(255,90,90,0.08); }
+        .lien-reset:active { transform: scale(0.96); }
+
         /* ===== FIX : bulle de volume qui suit le curseur ===== */
         .piste-volume { position: relative; padding-top: 2px; }
         #bulle-volume {
@@ -456,6 +468,12 @@
             box-shadow: 0 0 25px rgba(57,255,20,0.4);
         }
         .ui-audio .icone-audio { font-size: 30px; }
+        .waveform { display: flex; align-items: center; gap: 3px; height: 34px; }
+        .wf-barre {
+            width: 4px; height: 14%; min-height: 3px; border-radius: 2px;
+            background: var(--accent); box-shadow: 0 0 6px var(--accent);
+            transition: height .07s linear, opacity .07s linear;
+        }
 
         #ecran-blague.media-libre #zone-media video,
         #ecran-blague.media-libre #zone-media img,
@@ -700,25 +718,18 @@
 
         <div class="champ">
             <label>🌐 Adresse du serveur</label>
-            <input type="text" id="adresse-cerveau" value="http://35.202.5.248:3000" placeholder="http://ip:3000" oninput="validerAdresse()">
+            <input type="text" id="adresse-cerveau" value="http://35.209.236.123:3000" placeholder="http://ip:3000" oninput="validerAdresse()">
         </div>
 
         <div class="champ">
-            <label>🗺️ Zone d'apparition <small>(clique une case ou glisse l'aperçu)</small></label>
+            <label>🗺️ Position de l'overlay <small>(glisse l'aperçu où tu veux)</small></label>
             <div class="zone-picker" id="zone-picker">
-                <button class="zone" data-pos="haut-gauche" data-label="Haut gauche"  title="Haut gauche"  style="grid-column:1;grid-row:1"></button>
-                <button class="zone" data-pos="haut-centre" data-label="Haut centre"  title="Haut centre"  style="grid-column:2;grid-row:1"></button>
-                <button class="zone" data-pos="haut-droite" data-label="Haut droite"  title="Haut droite"  style="grid-column:3;grid-row:1"></button>
-                <button class="zone" data-pos="centre"      data-label="Centre"       title="Centre"       style="grid-column:2;grid-row:2"></button>
-                <button class="zone" data-pos="bas-gauche"  data-label="Bas gauche"   title="Bas gauche"   style="grid-column:1;grid-row:3"></button>
-                <button class="zone" data-pos="bas-centre"  data-label="Bas centre"   title="Bas centre"   style="grid-column:2;grid-row:3"></button>
-                <button class="zone" data-pos="bas-droite"  data-label="Bas droite"   title="Bas droite"   style="grid-column:3;grid-row:3"></button>
                 <div id="apercu-overlay" title="Glisse-moi où tu veux">
                     <div class="ap-tete"><span class="ap-rond"></span><span class="ap-nom"></span></div>
                     <div class="ap-ligne"></div>
                     <div class="ap-ligne court"></div>
                 </div>
-                <span class="indice-glisser">glisse l'aperçu</span>
+                <span class="indice-glisser">glisse ou clique</span>
             </div>
         </div>
 
@@ -738,6 +749,16 @@
         </div>
 
         <div class="champ">
+            <label>🗣️ Voix de secours (TTS local) <small>(utilisée si le serveur n'a pas de voix IA)</small></label>
+            <div class="champ-inline">
+                <select id="choix-voix" onchange="changerVoix(this.value)">
+                    <option value="">Chargement des voix…</option>
+                </select>
+                <button id="btn-tester-voix" class="btn-mini" onclick="testerVoix()">▶</button>
+            </div>
+        </div>
+
+        <div class="champ">
             <div class="ligne-toggle">
                 <span>🔕 Ne pas déranger</span>
                 <label class="interrupteur">
@@ -752,6 +773,14 @@
             <div id="palette"></div>
         </div>
 
+        <div class="champ">
+            <label>⌨️ Raccourci ouvrir/fermer <small>(par défaut : Inser)</small></label>
+            <div class="champ-inline">
+                <input type="text" id="affichage-raccourci" readonly value="Inser">
+                <button id="btn-raccourci" class="btn-mini" onclick="capturerRaccourci()">Modifier</button>
+            </div>
+        </div>
+
         <div id="bloc-en-ligne">
             <div class="titre-ligne"><span class="point-vivant"></span> <span id="compteur-en-ligne">0 en ligne</span></div>
             <div id="liste-pseudos"></div>
@@ -759,6 +788,9 @@
 
         <button id="bouton-action" onclick="gererConnexion()">Lancer l'overlay</button>
         <div id="statut"></div>
+        <div id="pied-reglages">
+            <button class="lien-reset" onclick="reinitialiserReglages()">↺ Réinitialiser les réglages</button>
+        </div>
         <div id="fondu-scroll"></div>
     </div>
 
@@ -801,6 +833,7 @@
         let nePasDeranger = false;
         let estInactif = false;
         let audioTtsActuel = null;
+        let raccourciActuel = 'Insert';
 
         function verifierFin() {
             if (!ttsEnCours && !mediaEnCours) {
@@ -973,9 +1006,15 @@
             chargerEcrans();
             ipcRenderer.send('reglages-etat', true);
 
+            chargerVoix();
+            setTimeout(chargerVoix, 300); // filet : certains moteurs Windows répondent en retard à getVoices()
+
             document.getElementById('ecran-connexion').addEventListener('scroll', majFonduScroll);
             validerAdresse();
             majVolume(document.getElementById('curseur-volume'));
+            raccourciActuel = localStorage.getItem('raccourci') || 'Insert';
+            majAffichageRaccourci();
+            ipcRenderer.invoke('definir-raccourci', raccourciActuel);
             setTimeout(() => { majFonduScroll(); placerApercu(); }, 3200); // après l'intro animée
         });
 
@@ -1058,12 +1097,22 @@
         }
 
         function initZonePicker() {
-            document.querySelectorAll('#zone-picker .zone').forEach(z => {
-                z.onclick = () => definirPosition(z.dataset.pos);
-                z.classList.toggle('active', positionActuelle !== 'libre' && z.dataset.pos === positionActuelle);
-            });
             initApercuDrag();
             placerApercu();
+        }
+
+        // Convertit un événement souris en coordonnées normalisées (0..1) dans le mini-écran
+        function coordsDepuis(e, pk, ap) {
+            const r = pk.getBoundingClientRect();
+            const cs = getComputedStyle(pk);
+            const padL = parseFloat(cs.paddingLeft), padT = parseFloat(cs.paddingTop);
+            const aw = ap.offsetWidth, ah = ap.offsetHeight;
+            const zoneW = pk.clientWidth  - padL - parseFloat(cs.paddingRight)  - aw;
+            const zoneH = pk.clientHeight - padT - parseFloat(cs.paddingBottom) - ah;
+            return {
+                fx: (e.clientX - r.left - padL - aw / 2) / (zoneW || 1),
+                fy: (e.clientY - r.top  - padT - ah / 2) / (zoneH || 1)
+            };
         }
 
         function initApercuDrag() {
@@ -1075,15 +1124,8 @@
 
             const auMouvement = (e) => {
                 if (!glisse) return;
-                const r = pk.getBoundingClientRect();
-                const cs = getComputedStyle(pk);
-                const padL = parseFloat(cs.paddingLeft), padT = parseFloat(cs.paddingTop);
-                const aw = ap.offsetWidth, ah = ap.offsetHeight;
-                const zoneW = pk.clientWidth  - padL - parseFloat(cs.paddingRight)  - aw;
-                const zoneH = pk.clientHeight - padT - parseFloat(cs.paddingBottom) - ah;
-                const fx = (e.clientX - r.left - padL - aw / 2) / (zoneW || 1);
-                const fy = (e.clientY - r.top  - padT - ah / 2) / (zoneH || 1);
-                definirPositionLibre(fx, fy, false);
+                const c = coordsDepuis(e, pk, ap);
+                definirPositionLibre(c.fx, c.fy, false);
             };
             const auRelache = () => {
                 if (!glisse) return;
@@ -1100,6 +1142,13 @@
                 ap.classList.add('glisse');
                 document.addEventListener('mousemove', auMouvement);
                 document.addEventListener('mouseup', auRelache);
+            });
+
+            // Clic n'importe où sur le mini-écran → place l'overlay à cet endroit
+            pk.addEventListener('click', (e) => {
+                if (e.target !== pk) return; // on ignore les clics sur la carte elle-même
+                const c = coordsDepuis(e, pk, ap);
+                definirPositionLibre(c.fx, c.fy, true);
             });
         }
 
@@ -1165,6 +1214,103 @@
             const menu = document.getElementById('ecran-connexion');
             menu.classList.add('portail');
             setTimeout(() => { menu.classList.remove('portail'); cacherMenuReglages(false); }, 560);
+        }
+
+        // Média introuvable / trop long à charger / lien cassé : on passe à la suite au lieu de laisser un carré noir
+        function mediaEchoue() {
+            clearTimeout(chronometreImage);
+            mediaEnCours = false;
+            verifierFin();
+        }
+
+        // Démarre le compte à rebours d'affichage d'une image, seulement une fois qu'elle a vraiment chargé
+        function demarrerAffichageImage() {
+            clearTimeout(chronometreImage);
+            chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 7000);
+        }
+
+        // ===== Réinitialiser les réglages =====
+        function reinitialiserReglages() {
+            if (!confirm("Réinitialiser tous les réglages aux valeurs par défaut ?")) return;
+            ['pseudo','adresse','volume','position','posX','posY','dnd','couleurMenu','ecranId','raccourci','voixURI']
+                .forEach(k => localStorage.removeItem(k));
+            document.getElementById('pseudo').value = '';
+            document.getElementById('adresse-cerveau').value = 'http://35.209.236.123:3000';
+            volumeChoisi = 0.5;
+            document.getElementById('curseur-volume').value = 0.5;
+            majVolume(document.getElementById('curseur-volume'));
+            positionActuelle = 'centre'; posX = 0.5; posY = 0.5; placerApercu();
+            nePasDeranger = false; document.getElementById('toggle-dnd').checked = false;
+            appliquerCouleurMenu('#39ff14');
+            const cp = document.getElementById('couleur-perso'); if (cp) cp.value = '#39ff14';
+            validerAdresse();
+            raccourciActuel = 'Insert'; majAffichageRaccourci();
+            ipcRenderer.invoke('definir-raccourci', 'Insert');
+            voixChoisieURI = null; chargerVoix();
+            if (socket && estConnecte) { socket.emit('etat-dnd', false); changerPosition(); }
+            flashStatut('Réglages réinitialisés ↺');
+        }
+
+        // ===== Raccourci clavier personnalisable =====
+        function majAffichageRaccourci() {
+            const jolis = { 'Insert':'Inser','Delete':'Suppr','Space':'Espace','Return':'Entrée','Escape':'Échap' };
+            let aff = raccourciActuel;
+            Object.keys(jolis).forEach(k => { aff = aff.replace(k, jolis[k]); });
+            aff = aff.replace('CommandOrControl', 'Ctrl');
+            const champ = document.getElementById('affichage-raccourci');
+            if (champ) champ.value = aff;
+        }
+
+        function accelerateurDepuisEvenement(e) {
+            const k = e.key;
+            if (['Control','Alt','Shift','Meta'].includes(k)) return null;
+            const mods = [];
+            if (e.ctrlKey) mods.push('Ctrl');
+            if (e.altKey) mods.push('Alt');
+            if (e.shiftKey) mods.push('Shift');
+            if (e.metaKey) mods.push('Super');
+            const special = {
+                ' ':'Space','Insert':'Insert','Delete':'Delete','Enter':'Return','Tab':'Tab','Backspace':'Backspace',
+                'ArrowUp':'Up','ArrowDown':'Down','ArrowLeft':'Left','ArrowRight':'Right',
+                'Home':'Home','End':'End','PageUp':'PageUp','PageDown':'PageDown'
+            };
+            let key;
+            if (special[k]) key = special[k];
+            else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) key = k;
+            else if (k.length === 1) key = k.toUpperCase();
+            else return null;
+            return mods.concat(key).join('+');
+        }
+
+        function capturerRaccourci() {
+            const champ = document.getElementById('affichage-raccourci');
+            const btn = document.getElementById('btn-raccourci');
+            champ.value = 'Appuie sur une touche…';
+            btn.disabled = true;
+            const fin = () => { btn.disabled = false; window.removeEventListener('keydown', handler, true); };
+            const handler = (e) => {
+                e.preventDefault();
+                if (e.key === 'Escape') { fin(); majAffichageRaccourci(); flashStatut('Modification annulée'); return; }
+                const acc = accelerateurDepuisEvenement(e);
+                if (!acc) return; // touche modificatrice seule : on attend la vraie touche
+                fin();
+                definirRaccourci(acc);
+            };
+            window.addEventListener('keydown', handler, true);
+        }
+
+        async function definirRaccourci(acc) {
+            let ok = false;
+            try { ok = await ipcRenderer.invoke('definir-raccourci', acc); } catch (e) {}
+            if (ok) {
+                raccourciActuel = acc;
+                localStorage.setItem('raccourci', acc);
+                majAffichageRaccourci();
+                flashStatut('Raccourci mis à jour ⌨️');
+            } else {
+                majAffichageRaccourci();
+                flashStatut('Touche indisponible, essaie-en une autre');
+            }
         }
 
         function echapper(t) {
@@ -1294,8 +1440,77 @@
 
         // ================= VOIX & MEDIAS =================
 
+        let voixDisponibles = [];
+        let voixChoisieURI = null; // identifiant unique de la voix sélectionnée (voiceURI)
+
+        // Score une voix pour deviner laquelle sonne le moins "robot" parmi celles installées sur le PC.
+        // On privilégie : le français, les voix "Online/Natural" (Windows 11 propose des voix neurales
+        // en plus des voix robotiques classiques), puis les voix locales de bonne réputation.
+        function scoreVoix(v) {
+            let score = 0;
+            const nom = (v.name || '').toLowerCase();
+            if (v.lang && v.lang.toLowerCase().startsWith('fr')) score += 100;
+            if (v.lang && v.lang.toLowerCase() === 'fr-fr') score += 10;
+            // Voix neurales Windows ("Microsoft ... Online (Natural)") sonnent nettement mieux
+            if (nom.includes('online') || nom.includes('natural')) score += 50;
+            if (nom.includes('denise') || nom.includes('henri') || nom.includes('paul') || nom.includes('vivienne')) score += 20;
+            if (!v.localService) score += 5; // souvent une voix cloud/neurale plutôt que le moteur SAPI basique
+            return score;
+        }
+
+        function chargerVoix() {
+            voixDisponibles = window.speechSynthesis.getVoices() || [];
+            const sel = document.getElementById('choix-voix');
+            if (!sel) return;
+            if (voixDisponibles.length === 0) return; // pas encore prêtes, onvoiceschanged réessaiera
+
+            const sauvegardee = localStorage.getItem('voixURI');
+            sel.innerHTML = '';
+            voixDisponibles.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v.voiceURI;
+                o.textContent = `${v.name} (${v.lang})`;
+                sel.appendChild(o);
+            });
+
+            // Choix de la voix : celle sauvegardée si elle existe encore, sinon la meilleure voix française détectée
+            let cible = sauvegardee && voixDisponibles.find(v => v.voiceURI === sauvegardee);
+            if (!cible) {
+                const triees = [...voixDisponibles].sort((a, b) => scoreVoix(b) - scoreVoix(a));
+                cible = triees[0];
+            }
+            if (cible) {
+                voixChoisieURI = cible.voiceURI;
+                sel.value = cible.voiceURI;
+            }
+        }
+
+        function changerVoix(uri) {
+            voixChoisieURI = uri;
+            localStorage.setItem('voixURI', uri);
+            flashStatut('Voix mise à jour 🗣️');
+        }
+
+        function testerVoix() {
+            try {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance("Bonjour, voici un aperçu de cette voix.");
+                appliquerVoix(u);
+                u.volume = volumeChoisi;
+                window.speechSynthesis.speak(u);
+            } catch (e) {}
+        }
+
+        // Recharge la liste dès que le navigateur a fini de charger les voix du système
+        // (sur Windows/Chrome, getVoices() est souvent vide au tout premier appel)
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = chargerVoix;
+        }
+
         function appliquerVoix(u) {
             u.lang = 'fr-FR';
+            const v = voixDisponibles.find(v => v.voiceURI === voixChoisieURI);
+            if (v) u.voice = v;
         }
 
         function parler(texte) {
@@ -1344,7 +1559,7 @@
             return `rgba(${r},${g},${b},${a})`;
         }
 
-        function lancerReactif(mediaEl, visuelEl) {
+        function lancerReactif(mediaEl, visuelEl, barres) {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1357,6 +1572,7 @@
                 reactifSource = src;
                 const data = new Uint8Array(analyser.frequencyBinCount);
                 const base = '0 18px 45px rgba(0,0,0,0.6)';
+                const pas = barres && barres.length ? Math.max(1, Math.floor(data.length * 0.7 / barres.length)) : 1;
                 const boucle = () => {
                     analyser.getByteFrequencyData(data);
                     let s = 0; for (let i = 0; i < data.length; i++) s += data[i];
@@ -1364,6 +1580,13 @@
                     if (visuelEl) {
                         visuelEl.style.boxShadow = `${base}, 0 0 ${12 + niveau * 70}px ${accentRGBA(0.25 + niveau * 0.6)}`;
                         visuelEl.style.borderColor = accentRGBA(0.35 + niveau * 0.65);
+                    }
+                    if (barres && barres.length) {
+                        for (let i = 0; i < barres.length; i++) {
+                            const v = data[i * pas] / 255;
+                            barres[i].style.height = (14 + v * 86) + '%';
+                            barres[i].style.opacity = 0.45 + v * 0.55;
+                        }
                     }
                     reactifRAF = requestAnimationFrame(boucle);
                 };
@@ -1462,10 +1685,13 @@
                     chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 30000);
                 }
                 else if (lienMin.match(/\.(mp3|wav|ogg)/)) {
-                    zoneMedia.innerHTML = `<div class="ui-audio"><span class="icone-audio">🔊</span><span>LIVE CHAT</span><audio autoplay id="lecteur-audio" style="display:none"><source src="${lienMedia}"></audio></div>`;
+                    zoneMedia.innerHTML = `<div class="ui-audio"><span class="icone-audio">🔊</span><div class="waveform" id="waveform"></div><audio autoplay id="lecteur-audio" style="display:none"><source src="${lienMedia}"></audio></div>`;
+                    const wf = document.getElementById('waveform');
+                    for (let i = 0; i < 18; i++) { const b = document.createElement('span'); b.className = 'wf-barre'; wf.appendChild(b); }
                     const l = document.getElementById('lecteur-audio'); l.volume = volumeChoisi;
                     l.onended = () => { mediaEnCours = false; verifierFin(); };
-                    lancerReactif(l, zoneMedia.querySelector('.ui-audio'));
+                    l.onerror = () => mediaEchoue();
+                    lancerReactif(l, zoneMedia.querySelector('.ui-audio'), wf.querySelectorAll('.wf-barre'));
                 }
                 else if (lienMin.match(/\.(mp4|webm|mov)/)) {
                     if (options.vert) {
@@ -1473,7 +1699,11 @@
                     } else {
                         zoneMedia.innerHTML = `<video autoplay id="lecteur-video"><source src="${lienMedia}"></video>`;
                         const l = document.getElementById('lecteur-video'); l.volume = volumeChoisi;
-                        l.onended = () => { mediaEnCours = false; verifierFin(); };
+                        l.onended = () => { clearTimeout(chronometreImage); mediaEnCours = false; verifierFin(); };
+                        l.onerror = () => mediaEchoue();
+                        // Si la vidéo n'a pas commencé à jouer sous 8s (réseau lent, lien capricieux), on n'attend pas indéfiniment
+                        l.oncanplay = () => clearTimeout(chronometreImage);
+                        chronometreImage = setTimeout(() => mediaEchoue(), 8000);
                         if (!mediaLibre) lancerReactif(l, l);
                     }
                 }
@@ -1481,9 +1711,11 @@
                     if (options.vert) {
                         afficherImageFondVert(lienMedia, zoneMedia);
                     } else {
-                        zoneMedia.innerHTML = `<img src="${lienMedia}">`;
+                        zoneMedia.innerHTML = `<img src="${lienMedia}" onerror="mediaEchoue()" onload="clearTimeout(chronometreImage); demarrerAffichageImage();">`;
                     }
-                    chronometreImage = setTimeout(() => { mediaEnCours = false; verifierFin(); }, 7000);
+                    // Le compte à rebours d'affichage (7s) ne démarre qu'une fois le média réellement chargé.
+                    // En attendant, un filet de 8s couvre le cas où l'image ne charge jamais (sans déclencher onerror).
+                    chronometreImage = setTimeout(() => mediaEchoue(), 8000);
                 }
             }
 
@@ -1508,8 +1740,9 @@
             void splash.offsetWidth;
             splash.classList.add('entre');
 
-            // Sécurité anti-bug absolue : quoi qu'il arrive, l'écran s'efface de force après 60 secondes maximum
-            chronometreSecurite = setTimeout(() => { nettoyerEcran(); }, 60000);
+            // Sécurité anti-bug absolue : quoi qu'il arrive, l'écran s'efface de force après 45 secondes maximum
+            // (les médias ont leurs propres délais plus courts ci-dessus ; ceci ne couvre que les cas vraiment imprévus)
+            chronometreSecurite = setTimeout(() => { nettoyerEcran(); }, 45000);
         }
 
         // ====== CHROMA KEY (retire le vert) ======
@@ -1533,9 +1766,13 @@
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             zoneMedia.appendChild(video); zoneMedia.appendChild(canvas);
 
-            video.onloadeddata = () => { canvas.width = video.videoWidth; canvas.height = video.videoHeight; dessiner(); };
-            
-            video.onended = () => { mediaEnCours = false; verifierFin(); };
+            video.onloadeddata = () => { clearTimeout(chronometreImage); canvas.width = video.videoWidth; canvas.height = video.videoHeight; dessiner(); };
+
+            video.onended = () => { clearTimeout(chronometreImage); mediaEnCours = false; verifierFin(); };
+            video.onerror = () => mediaEchoue();
+
+            // Filet : si la vidéo ne charge jamais (ni succès ni erreur HTTP), on n'attend pas indéfiniment
+            chronometreImage = setTimeout(() => mediaEchoue(), 8000);
 
             function dessiner() {
                 if (video.paused || video.ended) { boucleChroma = requestAnimationFrame(dessiner); return; }
@@ -1552,10 +1789,15 @@
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             zoneMedia.appendChild(canvas);
             img.onload = () => {
+                clearTimeout(chronometreImage);
                 canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
                 ctx.drawImage(img, 0, 0);
                 try { detourerCanvas(ctx, canvas.width, canvas.height); } catch (e) {}
+                demarrerAffichageImage();
             };
+            img.onerror = () => mediaEchoue();
+            // Filet : si l'image ne charge jamais, on n'attend pas indéfiniment
+            chronometreImage = setTimeout(() => mediaEchoue(), 8000);
             img.src = lienMedia;
         }
     </script>
