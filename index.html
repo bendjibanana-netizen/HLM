@@ -884,7 +884,58 @@
         }
 
         // ===== ANIMATION D'INTRO HLM =====
+        // Son de lancement synthétisé (aucun fichier externe), SYNCHRONISÉ avec les lettres H-L-M
+        let ctxLancement = null;
+        let gainLancement = null;
+        let audioLancementPret = false;
+
+        function preparerAudioLancement() {
+            try {
+                ctxLancement = new (window.AudioContext || window.webkitAudioContext)();
+                gainLancement = ctxLancement.createGain();
+                gainLancement.gain.value = 0.18; // volume global discret
+                gainLancement.connect(ctxLancement.destination);
+                const marquerPret = () => { audioLancementPret = true; };
+                if (ctxLancement.state === 'suspended') {
+                    ctxLancement.resume().then(marquerPret).catch(() => {
+                        // autoplay bloqué : on réveille au premier contact utilisateur
+                        const auContact = () => {
+                            ctxLancement.resume().then(marquerPret).catch(() => {});
+                            window.removeEventListener('pointerdown', auContact);
+                            window.removeEventListener('keydown', auContact);
+                            window.removeEventListener('mousemove', auContact);
+                        };
+                        window.addEventListener('pointerdown', auContact, { once: true });
+                        window.addEventListener('keydown', auContact, { once: true });
+                        window.addEventListener('mousemove', auContact, { once: true });
+                    });
+                } else {
+                    marquerPret();
+                }
+            } catch (e) { /* audio indisponible */ }
+        }
+
+        // Joue une note ponctuelle (appelée pile au moment où une lettre apparaît)
+        function noteLancement(freq, type = 'triangle', duree = 0.55, vol = 1) {
+            if (!ctxLancement || !gainLancement) return;
+            try {
+                const osc = ctxLancement.createOscillator();
+                const g = ctxLancement.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                const t0 = ctxLancement.currentTime + 0.01;
+                g.gain.setValueAtTime(0.0001, t0);
+                g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + duree);
+                osc.connect(g); g.connect(gainLancement);
+                osc.start(t0);
+                osc.stop(t0 + duree + 0.05);
+            } catch (e) {}
+        }
+
         (function lancerIntro() {
+            preparerAudioLancement();
+
             // ── Couleur sauvegardée ── on l'applique AVANT toute animation
             (function() {
                 const hex = localStorage.getItem('couleurMenu');
@@ -924,14 +975,14 @@
             const barre = document.getElementById('hlm-barre');
             const intro = document.getElementById('intro-hlm');
 
-            // Étape 1 : H apparaît
-            setTimeout(() => { H.classList.add('anime'); }, 200);
-            // Étape 2 : L
-            setTimeout(() => { L.classList.add('anime'); }, 450);
-            // Étape 3 : M
-            setTimeout(() => { M.classList.add('anime'); }, 700);
+            // Étape 1 : H apparaît (+ note Do5 synchronisée)
+            setTimeout(() => { H.classList.add('anime'); noteLancement(523.25); }, 200);
+            // Étape 2 : L (+ note Mi5)
+            setTimeout(() => { L.classList.add('anime'); noteLancement(659.25); }, 450);
+            // Étape 3 : M (+ note Sol5)
+            setTimeout(() => { M.classList.add('anime'); noteLancement(783.99); }, 700);
 
-            // Étape 4 : Remplissage couleur + séparateurs
+            // Étape 4 : Remplissage couleur + séparateurs (+ shimmer aigu)
             setTimeout(() => {
                 H.classList.add('pleine');
                 setTimeout(() => { L.classList.add('pleine'); }, 120);
@@ -939,6 +990,7 @@
                 sep1.classList.add('visible');
                 sep2.classList.add('visible');
                 tagline.classList.add('visible');
+                noteLancement(1567.98, 'sine', 0.6, 0.5); // Sol6 brillant
             }, 1200);
 
             // Étape 5 : lettres passent en respiration
@@ -972,7 +1024,10 @@
                 setTimeout(() => {
                     intro.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                     intro.style.opacity = '0';
-                    setTimeout(() => { intro.style.display = 'none'; }, 620);
+                    setTimeout(() => {
+                        intro.style.display = 'none';
+                        try { if (ctxLancement) ctxLancement.close(); } catch (e) {}
+                    }, 620);
                 }, 80);
             }, 2800);
         })();
