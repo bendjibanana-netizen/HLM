@@ -56,8 +56,14 @@ async function verifierMiseAJour() {
         // 3) on mémorise la nouvelle version
         fs.writeFileSync(path.join(__dirname, 'version.json'), JSON.stringify({ version: manifeste.version }));
 
-        // 4) on relance l'app avec la nouvelle version
-        app.relaunch();
+        // 4) on relance l'app avec la nouvelle version.
+        // On passe explicitement le dossier de l'app : sinon, lancé depuis un
+        // raccourci, le relaunch peut repartir sans savoir quel dossier ouvrir.
+        if (!app.isPackaged) {
+            app.relaunch({ args: process.argv.slice(1).concat([app.getAppPath()]) });
+        } else {
+            app.relaunch();
+        }
         app.exit(0);
     } catch (e) {
         // hors ligne ou erreur : on démarre simplement la version actuelle
@@ -395,7 +401,7 @@ function creerRaccourciBureau() {
 
         const options = {
             target: cible,
-            cwd: path.dirname(cible),
+            cwd: app.isPackaged ? path.dirname(cible) : app.getAppPath(),
             description: 'Live Chat HLM - overlay de chat en direct'
         };
         // En mode non empaqueté (npm start), on passe le dossier de l'app en argument
