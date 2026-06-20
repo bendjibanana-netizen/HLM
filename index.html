@@ -177,6 +177,45 @@
             font-family: 'Space Grotesk'; font-size: 12px; font-weight: 600;
             letter-spacing: 1px; text-transform: uppercase; color: #e6ebe6;
         }
+
+        /* ===== Revoir le dernier livechat ===== */
+        #bloc-replay {
+            display: none; text-align: left; margin-top: 16px;
+            padding: 16px; border-radius: 16px;
+            background: rgba(0,0,0,0.4); border: 1px solid var(--accent-12);
+        }
+        #bloc-replay.visible { display: block; }
+        #bloc-replay .titre-ligne {
+            display: flex; align-items: center; gap: 9px;
+            font-family: 'Space Grotesk'; font-size: 12px; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; color: #e6ebe6;
+            margin-bottom: 12px;
+        }
+        #replay-contenu { display: flex; align-items: center; gap: 12px; }
+        .replay-vignette {
+            width: 54px; height: 54px; border-radius: 11px; flex: none; overflow: hidden;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .replay-vignette img, .replay-vignette video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .replay-infos { flex: 1; min-width: 0; }
+        .replay-auteur { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .replay-texte { font-size: 12.5px; color: rgba(255,255,255,0.72); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .replay-badges { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+        .replay-badge {
+            font-size: 9px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+            padding: 2px 7px; border-radius: 99px;
+            background: var(--accent-10); color: var(--accent); border: 1px solid var(--accent-35);
+        }
+        .replay-rejouer {
+            -webkit-app-region: no-drag; flex: none;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--accent-10); border: 1px solid var(--accent-35); color: var(--accent);
+            font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all .2s ease;
+        }
+        .replay-rejouer:hover  { background: var(--accent-15); transform: scale(1.08); }
+        .replay-rejouer:active { transform: scale(0.92); }
         .point-vivant {
             width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
             box-shadow: 0 0 0 0 var(--accent-55); animation: ping 1.8s infinite;
@@ -749,7 +788,7 @@
         </div>
 
         <div class="champ">
-            <label>🗣️ Voix de secours (TTS local) <small>(utilisée si le serveur n'a pas de voix IA)</small></label>
+            <label>🗣️ Voix du TTS <small>(voix lue lors d'un !box -tts)</small></label>
             <div class="champ-inline">
                 <select id="choix-voix" onchange="changerVoix(this.value)">
                     <option value="">Chargement des voix…</option>
@@ -779,6 +818,11 @@
                 <input type="text" id="affichage-raccourci" readonly value="Inser">
                 <button id="btn-raccourci" class="btn-mini" onclick="capturerRaccourci()">Modifier</button>
             </div>
+        </div>
+
+        <div id="bloc-replay">
+            <div class="titre-ligne">📼 <span>Dernier livechat</span></div>
+            <div id="replay-contenu"></div>
         </div>
 
         <div id="bloc-en-ligne">
@@ -1679,11 +1723,75 @@
             }, 450);
         }
 
+        // ===== REVOIR LE DERNIER LIVECHAT =====
+        let dernierLiveChat = null;
+
+        function typeMediaApercu(lien) {
+            const l = (lien || '').toLowerCase().split('?')[0];
+            if (!l) return 'aucun';
+            if (l.match(/(?:youtube\.com|youtu\.be)/)) return 'youtube';
+            if (l.match(/\.(mp3|wav|ogg|m4a)$/)) return 'audio';
+            if (l.match(/\.(mp4|webm|mov)$/)) return 'video';
+            if (l.match(/\.gif$/)) return 'gif';
+            return 'image';
+        }
+
+        function enregistrerReplay(charge) {
+            dernierLiveChat = charge;
+            const bloc = document.getElementById('bloc-replay');
+            const cont = document.getElementById('replay-contenu');
+            if (!bloc || !cont) return;
+
+            const lienMedia = charge.lienMedia || "";
+            const texte     = charge.texte || "";
+            const options   = charge.options || {};
+            const auteur    = charge.auteur || null;
+            const type      = typeMediaApercu(lienMedia);
+
+            let vignette = '🎬';
+            if (type === 'image' || type === 'gif') vignette = `<img src="${lienMedia}" alt="">`;
+            else if (type === 'video') vignette = `<video src="${lienMedia}" muted preload="metadata"></video>`;
+            else if (type === 'youtube') vignette = '▶️';
+            else if (type === 'audio') vignette = '🔊';
+            else if (options.tts) vignette = '💬';
+
+            const badges = [];
+            if (options.plein)       badges.push('Plein écran');
+            if (options.vert)        badges.push('Fond vert');
+            if (options.transparent) badges.push('Transparent');
+            if (options.tts)         badges.push('Voix');
+            if (options.anonyme || !auteur) badges.push('Anonyme');
+
+            const nomAuteur = (auteur && auteur.nom) ? auteur.nom : 'Anonyme';
+            const apercu = texte ? texte : (lienMedia ? '(média sans texte)' : '');
+
+            cont.innerHTML = `
+                <div class="replay-vignette">${vignette}</div>
+                <div class="replay-infos">
+                    <div class="replay-auteur">${echapper(nomAuteur)}</div>
+                    <div class="replay-texte">${echapper(apercu)}</div>
+                    <div class="replay-badges">${badges.map(b => `<span class="replay-badge">${b}</span>`).join('')}</div>
+                </div>
+                <button class="replay-rejouer" onclick="rejouerDernier()" title="Revoir ce livechat">↻</button>
+            `;
+            bloc.classList.add('visible');
+        }
+
+        // Rejoue le dernier livechat sur l'overlay (sans repasser par Discord)
+        function rejouerDernier() {
+            if (!dernierLiveChat) return;
+            fileDAttente.push(dernierLiveChat);
+            lireProchaineBlague();
+            flashStatut('Relecture du dernier livechat ↻');
+        }
+
         function afficherMedia(charge) {
             const lienMedia = charge.lienMedia || "";
             const texte     = charge.texte || "";
             const options   = charge.options || {};
             const auteur    = charge.auteur || null;
+
+            enregistrerReplay(charge);
 
             const splash   = document.getElementById('ecran-blague');
             const zoneMedia= document.getElementById('zone-media');
