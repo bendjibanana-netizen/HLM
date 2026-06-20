@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, screen, nativeImage, powerMonitor, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, screen, nativeImage, powerMonitor, globalShortcut, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -300,8 +300,149 @@ function creerEcran() {
     ipcMain.handle('definir-raccourci', (e, acc) => enregistrerToggle(acc));
 }
 
+// =========================================================
+//  RACCOURCI BUREAU (Windows)
+//  Au lancement, si aucun raccourci n'existe sur le bureau, on en crée
+//  un pointant vers l'app, avec pour icône logo.png (converti en .ico).
+//  On construit un .ico au format BMP/DIB (et non PNG embarqué) car
+//  l'explorateur Windows l'affiche de façon bien plus fiable pour les .lnk.
+// =========================================================
+
+// Construit un .ico (image BMP/DIB 32 bits) à partir de pixels BGRA
+function bgraVersIco(bgra, largeur, hauteur) {
+    const tailleImage = largeur * hauteur * 4;
+    // masque AND : 1 bit/pixel, lignes alignées sur 4 octets
+    const octetsParLigneMasque = Math.ceil(largeur / 8);
+    const lignePadMasque = Math.ceil(octetsParLigneMasque / 4) * 4;
+    const tailleMasque = lignePadMasque * hauteur;
+
+    // BITMAPINFOHEADER (40 octets)
+    const dib = Buffer.alloc(40);
+    dib.writeUInt32LE(40, 0);            // taille du header
+    dib.writeInt32LE(largeur, 4);        // largeur
+    dib.writeInt32LE(hauteur * 2, 8);    // hauteur ×2 (image + masque), convention ICO
+    dib.writeUInt16LE(1, 12);            // plans
+    dib.writeUInt16LE(32, 14);           // bits par pixel
+    dib.writeUInt32LE(0, 16);            // compression BI_RGB
+    dib.writeUInt32LE(tailleImage + tailleMasque, 20);
+
+    // BMP est bottom-up : on inverse l'ordre des lignes
+    const pixels = Buffer.alloc(tailleImage);
+    for (let y = 0; y < hauteur; y++) {
+        const src = y * largeur * 4;
+        const dst = (hauteur - 1 - y) * largeur * 4;
+        bgra.copy(pixels, dst, src, src + largeur * 4);
+    }
+    const masque = Buffer.alloc(tailleMasque, 0); // 0 = pixel visible (l'alpha gère la transparence)
+    const imageComplete = Buffer.concat([dib, pixels, masque]);
+
+    const tete = Buffer.alloc(6);
+    tete.writeUInt16LE(0, 0); tete.writeUInt16LE(1, 2); tete.writeUInt16LE(1, 4);
+    const entree = Buffer.alloc(16);
+    entree.writeUInt8(largeur  >= 256 ? 0 : largeur, 0);
+    entree.writeUInt8(hauteur >= 256 ? 0 : hauteur, 1);
+    entree.writeUInt8(0, 2); entree.writeUInt8(0, 3);
+    entree.writeUInt16LE(1, 4); entree.writeUInt16LE(32, 6);
+    entree.writeUInt32LE(imageComplete.length, 8);
+    entree.writeUInt32LE(22, 12);
+
+    return Buffer.concat([tete, entree, imageComplete]);
+}
+
+// Convertit logo.png -> logo.ico (une seule fois). Renvoie le chemin du .ico, ou null.
+function preparerIcone() {
+    try {
+        const cheminPng = path.join(__dirname, 'logo.png');
+        if (!fs.existsSync(cheminPng)) return null;
+
+        const cheminIco = path.join(app.getPath('userData'), 'logo.ico');
+        // Régénère si l'ico n'existe pas ou si le png est plus récent
+        let aRegenerer = true;
+        try {
+            if (fs.existsSync(cheminIco)) {
+                aRegenerer = fs.statSync(cheminPng).mtimeMs > fs.statSync(cheminIco).mtimeMs;
+            }
+        } catch (e) {}
+
+        if (aRegenerer) {
+            let img = nativeImage.createFromPath(cheminPng);
+            if (img.isEmpty()) return null;
+
+            // On normalise à 256×256 max (taille d'icône standard ; évite un .ico énorme)
+            const taille = img.getSize();
+            const cote = Math.min(256, Math.max(taille.width, taille.height) || 256);
+            img = img.resize({ width: cote, height: cote, quality: 'best' });
+
+            const dim = img.getSize();
+            const bgra = img.toBitmap(); // pixels BGRA
+            fs.writeFileSync(cheminIco, bgraVersIco(bgra, dim.width, dim.height));
+        }
+        return cheminIco;
+    } catch (e) {
+        return null;
+    }
+}
+
+// Crée le raccourci bureau s'il n'existe pas, ou corrige son icône s'il pointe encore sur l'icône Electron
+function creerRaccourciBureau() {
+    if (process.platform !== 'win32') return; // raccourci .lnk = Windows uniquement
+
+    try {
+        const bureau = app.getPath('desktop');
+        const cheminRaccourci = path.join(bureau, 'Live Chat HLM.lnk');
+        const cible = process.execPath;
+        const icone = preparerIcone();
+
+        const options = {
+            target: cible,
+            cwd: path.dirname(cible),
+            description: 'Live Chat HLM - overlay de chat en direct'
+        };
+        // En mode non empaqueté (npm start), on passe le dossier de l'app en argument
+        if (!app.isPackaged) {
+            options.args = `"${app.getAppPath()}"`;
+        }
+        if (icone) {
+            options.icon = icone;
+            options.iconIndex = 0;
+        }
+
+        if (fs.existsSync(cheminRaccourci)) {
+            // Le raccourci existe déjà. On vérifie s'il a la bonne icône ;
+            // sinon (ancien raccourci avec l'icône Electron), on le met à jour.
+            if (!icone) return; // pas d'icône à appliquer, on ne touche à rien
+            let icoActuelle = '';
+            try {
+                const details = shell.readShortcutLink(cheminRaccourci);
+                icoActuelle = (details && details.icon) || '';
+            } catch (e) {}
+            if (icoActuelle !== icone) {
+                try { shell.writeShortcutLink(cheminRaccourci, 'update', { icon: icone, iconIndex: 0 }); } catch (e) {}
+                rafraichirIcones();
+            }
+            return;
+        }
+
+        // Création initiale
+        shell.writeShortcutLink(cheminRaccourci, 'create', options);
+        rafraichirIcones();
+    } catch (e) {
+        // échec silencieux : pas de raccourci, mais l'app démarre normalement
+    }
+}
+
+// Demande à Windows de rafraîchir son cache d'icônes (sinon l'ancienne icône peut persister à l'écran)
+function rafraichirIcones() {
+    try {
+        const { execFile } = require('child_process');
+        // Notifie le shell qu'une association d'icône a changé
+        execFile('ie4uinit.exe', ['-show'], () => {});
+    } catch (e) {}
+}
+
 app.whenReady().then(async () => {
     await verifierMiseAJour(); // si une maj est appliquée, l'app se relance ici
+    creerRaccourciBureau();    // crée le raccourci bureau au premier lancement
     creerEcran();
 });
 
