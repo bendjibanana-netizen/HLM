@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Chat</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Filtre de nudité (analyse locale, aucune image n'est envoyée à un service externe) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nsfwjs@4.3.0/dist/browser/nsfwjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
@@ -711,6 +714,50 @@
             0%   { background-position: 0 0; }
             100% { background-position: 0 100px; }
         }
+
+        /* ===== Filtre de nudité : panneau de validation ===== */
+        #panneau-validation {
+            position: fixed; inset: 0; z-index: 10000;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(8, 6, 10, 0.92); backdrop-filter: blur(6px);
+            -webkit-app-region: no-drag;
+        }
+        #panneau-validation.actif { display: flex; }
+        .pv-carte {
+            width: min(420px, 88%); text-align: center;
+            background: rgba(20, 16, 22, 0.96); color: #fff;
+            border: 1px solid rgba(255, 140, 140, 0.35); border-radius: 20px;
+            padding: 26px 24px; box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+        }
+        .pv-apercu {
+            width: 100%; height: 180px; border-radius: 14px; overflow: hidden;
+            margin-bottom: 18px; background: #000; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pv-apercu img, .pv-apercu video {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: blur(26px) brightness(0.7); transform: scale(1.1);
+        }
+        .pv-apercu .cadenas {
+            position: absolute; font-size: 42px; z-index: 2;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
+        }
+        .pv-titre {
+            font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700;
+            color: #ff9d9d; margin-bottom: 8px;
+        }
+        .pv-texte { font-size: 13.5px; color: rgba(255,255,255,0.65); line-height: 1.5; margin-bottom: 6px; }
+        .pv-auteur { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+        .pv-actions { display: flex; gap: 10px; }
+        .pv-btn {
+            -webkit-app-region: no-drag; flex: 1; padding: 13px; border-radius: 12px; cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; border: none;
+            transition: all .18s ease;
+        }
+        .pv-btn.ignorer { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+        .pv-btn.ignorer:hover { background: rgba(255,255,255,0.14); }
+        .pv-btn.afficher { background: #ff5a5a; color: #fff; }
+        .pv-btn.afficher:hover { background: #ff7070; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -808,6 +855,17 @@
         </div>
 
         <div class="champ">
+            <div class="ligne-toggle">
+                <span>🔞 Filtre de nudité</span>
+                <label class="interrupteur">
+                    <input type="checkbox" id="toggle-filtre" checked onchange="basculerFiltreNudite(this.checked)">
+                    <span class="curseur"></span>
+                </label>
+            </div>
+            <div id="etat-filtre" class="avertissement-mini" style="color:rgba(255,255,255,0.4);"></div>
+        </div>
+
+        <div class="champ">
             <label>🎨 Couleur du menu</label>
             <div id="palette"></div>
         </div>
@@ -851,6 +909,20 @@
         </div>
     </div>
 
+    <!-- Filtre de nudité : validation avant affichage -->
+    <div id="panneau-validation">
+        <div class="pv-carte">
+            <div class="pv-apercu" id="pv-apercu"><span class="cadenas">🔞</span></div>
+            <div class="pv-titre">Contenu peut-être sensible</div>
+            <div class="pv-texte">Ce média a été détecté comme potentiellement explicite. Il est flouté en attendant ton choix.</div>
+            <div class="pv-auteur" id="pv-auteur"></div>
+            <div class="pv-actions">
+                <button class="pv-btn ignorer" onclick="rejeterMediaSensible()">Ignorer</button>
+                <button class="pv-btn afficher" onclick="validerMediaSensible()">Afficher quand même</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const { ipcRenderer } = require('electron');
         let socket = null;
@@ -878,6 +950,7 @@
         let estInactif = false;
         let audioTtsActuel = null;
         let raccourciActuel = 'Insert';
+        let filtreNuditeActif = true; // filtre de nudité activé par défaut
 
         function verifierFin() {
             if (!ttsEnCours && !mediaEnCours) {
@@ -1096,6 +1169,17 @@
             nePasDeranger = localStorage.getItem('dnd') === '1';
             document.getElementById('toggle-dnd').checked = nePasDeranger;
 
+            // Filtre de nudité : activé par défaut, sauf si désactivé précédemment
+            filtreNuditeActif = localStorage.getItem('filtreNudite') !== '0';
+            document.getElementById('toggle-filtre').checked = filtreNuditeActif;
+            if (filtreNuditeActif) chargerModeleNsfw();
+            majEtatFiltre();
+            // On rafraîchit l'état du filtre une fois le modèle chargé
+            const verifFiltre = setInterval(() => {
+                majEtatFiltre();
+                if (nsfwPret || typeof nsfwjs === 'undefined') clearInterval(verifFiltre);
+            }, 800);
+
             const couleurSauvee = localStorage.getItem('couleurMenu') || '#39ff14';
             construirePalette();
             appliquerCouleurMenu(couleurSauvee);
@@ -1267,6 +1351,25 @@
             flashStatut(actif ? 'Ne pas déranger activé 🔕' : 'Réception réactivée 🔔');
         }
 
+        function basculerFiltreNudite(actif) {
+            filtreNuditeActif = actif;
+            localStorage.setItem('filtreNudite', actif ? '1' : '0');
+            flashStatut(actif ? 'Filtre de nudité activé 🔞' : 'Filtre de nudité désactivé');
+            if (actif) chargerModeleNsfw(); // charge le modèle si pas déjà fait
+            majEtatFiltre();
+        }
+
+        // Affiche l'état réel du filtre (prêt, en chargement, indisponible)
+        function majEtatFiltre() {
+            const el = document.getElementById('etat-filtre');
+            if (!el) return;
+            if (!filtreNuditeActif) { el.textContent = ''; return; }
+            if (nsfwPret) el.textContent = '✓ Analyse active (images et vidéos)';
+            else if (nsfwEnChargement) el.textContent = '⏳ Chargement du filtre…';
+            else if (typeof nsfwjs === 'undefined') el.textContent = '⚠️ Filtre indisponible (hors ligne au démarrage)';
+            else el.textContent = '⏳ Initialisation…';
+        }
+
         function flashStatut(txt) {
             const s = document.getElementById('statut');
             if (!s) return;
@@ -1331,7 +1434,7 @@
         // ===== Réinitialiser les réglages =====
         function reinitialiserReglages() {
             if (!confirm("Réinitialiser tous les réglages aux valeurs par défaut ?")) return;
-            ['pseudo','adresse','volume','position','posX','posY','dnd','couleurMenu','ecranId','raccourci','voixURI']
+            ['pseudo','adresse','volume','position','posX','posY','dnd','couleurMenu','ecranId','raccourci','voixURI','filtreNudite']
                 .forEach(k => localStorage.removeItem(k));
             document.getElementById('pseudo').value = '';
             document.getElementById('adresse-cerveau').value = 'http://35.209.236.123:3000';
@@ -1340,6 +1443,7 @@
             majVolume(document.getElementById('curseur-volume'));
             positionActuelle = 'centre'; posX = 0.5; posY = 0.5; placerApercu();
             nePasDeranger = false; document.getElementById('toggle-dnd').checked = false;
+            filtreNuditeActif = true; document.getElementById('toggle-filtre').checked = true; chargerModeleNsfw(); majEtatFiltre();
             appliquerCouleurMenu('#39ff14');
             const cp = document.getElementById('couleur-perso'); if (cp) cp.value = '#39ff14';
             validerAdresse();
@@ -1778,18 +1882,202 @@
         }
 
         // Rejoue le dernier livechat sur l'overlay (sans repasser par Discord)
-        function rejouerDernier() {
-            if (!dernierLiveChat) return;
-            fileDAttente.push(dernierLiveChat);
-            lireProchaineBlague();
-            flashStatut('Relecture du dernier livechat ↻');
+        // ============================================================
+        //  FILTRE DE NUDITÉ (analyse 100% locale via NSFW.js)
+        //  Le média est analysé AVANT affichage. S'il est jugé sensible,
+        //  on l'affiche flouté avec un choix : Ignorer / Afficher quand même.
+        //  Aucune image n'est envoyée à un service externe.
+        // ============================================================
+        let modeleNsfw = null;
+        let nsfwPret = false;
+        let nsfwEnChargement = false;
+        let chargeEnAttente = null; // le livechat en attente de validation
+
+        async function chargerModeleNsfw() {
+            if (nsfwPret || nsfwEnChargement) return;
+            if (typeof nsfwjs === 'undefined') return; // librairie pas chargée (hors ligne)
+            nsfwEnChargement = true;
+            try {
+                // En v4, le modèle MobileNetV2 est embarqué dans le bundle navigateur :
+                // load() sans argument l'utilise directement, sans requête réseau supplémentaire.
+                modeleNsfw = await nsfwjs.load();
+                nsfwPret = true;
+            } catch (e) {
+                // échec éventuel : le filtre reste inactif, les médias passent normalement
+                console.warn('Filtre de nudité indisponible :', e.message);
+            }
+            nsfwEnChargement = false;
+            majEtatFiltre();
         }
 
-        function afficherMedia(charge) {
+        // Seuils "équilibrés" : on signale si le contenu est nettement explicite,
+        // sans être trop strict (pour limiter les faux positifs).
+        function estSensible(predictions) {
+            const p = {};
+            predictions.forEach(x => { p[x.className] = x.probability; });
+            const porn   = p.Porn   || 0;
+            const hentai = p.Hentai || 0;
+            const sexy   = p.Sexy   || 0;
+            if (porn   >= 0.55) return true;
+            if (hentai >= 0.60) return true;
+            if (porn + hentai >= 0.65) return true;
+            if (porn + hentai + sexy >= 0.85) return true;
+            return false;
+        }
+
+        // Analyse une image déjà chargée (HTMLImageElement)
+        async function analyserImage(img) {
+            if (!nsfwPret || !modeleNsfw) return false;
+            try {
+                const preds = await modeleNsfw.classify(img);
+                return estSensible(preds);
+            } catch (e) { return false; }
+        }
+
+        // Analyse une vidéo en échantillonnant quelques images-clés
+        async function analyserVideo(url) {
+            if (!nsfwPret || !modeleNsfw) return false;
+            return new Promise((resolve) => {
+                const v = document.createElement('video');
+                v.crossOrigin = 'anonymous'; v.muted = true; v.src = url;
+                v.preload = 'auto';
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                let fini = false;
+                const terminer = (res) => { if (!fini) { fini = true; try { v.remove(); } catch(e){} resolve(res); } };
+
+                v.onloadeddata = async () => {
+                    const duree = v.duration && isFinite(v.duration) ? v.duration : 0;
+                    // On teste début, milieu, et deux autres points
+                    const points = duree ? [0.1, duree*0.25, duree*0.5, duree*0.75] : [0];
+                    canvas.width = v.videoWidth || 224; canvas.height = v.videoHeight || 224;
+                    for (const t of points) {
+                        const ok = await new Promise((res2) => {
+                            v.onseeked = async () => {
+                                try {
+                                    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+                                    const preds = await modeleNsfw.classify(canvas);
+                                    res2(estSensible(preds));
+                                } catch (e) { res2(false); }
+                            };
+                            try { v.currentTime = t; } catch (e) { res2(false); }
+                        });
+                        if (ok) return terminer(true); // une seule image explicite suffit à signaler
+                    }
+                    terminer(false);
+                };
+                v.onerror = () => terminer(false);
+                // Filet : si l'analyse traîne, on laisse passer après 6s (le média a déjà été temporisé en amont)
+                setTimeout(() => terminer(false), 6000);
+            });
+        }
+
+        // Détermine si un livechat doit être contrôlé, et lance l'analyse.
+        // Renvoie true si le média est sensible (et doit être mis en validation).
+        async function mediaEstSensible(charge) {
+            if (!nsfwPret) return false; // filtre pas prêt -> on laisse passer
+            if (!filtreNuditeActif) return false;
+            const lien = (charge.lienMedia || '').toLowerCase();
+            if (!lien) return false;
+
+            // Images / GIF
+            if (lien.match(/\.(png|jpe?g|webp|gif)/)) {
+                return await new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = async () => resolve(await analyserImage(img));
+                    img.onerror = () => resolve(false);
+                    img.src = charge.lienMedia;
+                    setTimeout(() => resolve(false), 6000); // filet
+                });
+            }
+            // Vidéos
+            if (lien.match(/\.(mp4|webm|mov)/)) {
+                return await analyserVideo(charge.lienMedia);
+            }
+            // Audio, YouTube, texte : non analysés
+            return false;
+        }
+
+        // Affiche le panneau de validation pour un média sensible
+        function demanderValidation(charge) {
+            chargeEnAttente = charge;
+            const apercu = document.getElementById('pv-apercu');
+            const auteurTxt = document.getElementById('pv-auteur');
+            const lien = (charge.lienMedia || '').toLowerCase();
+
+            // Aperçu flouté
+            let media = '<span class="cadenas">🔞</span>';
+            if (lien.match(/\.(mp4|webm|mov)/)) media += `<video src="${charge.lienMedia}" muted></video>`;
+            else media += `<img src="${charge.lienMedia}" alt="">`;
+            apercu.innerHTML = media;
+
+            const nom = (charge.auteur && charge.auteur.nom) ? charge.auteur.nom : 'Anonyme';
+            auteurTxt.innerText = 'Envoyé par ' + nom;
+
+            document.getElementById('panneau-validation').classList.add('actif');
+            // Le panneau capte les clics : on rend la fenêtre cliquable
+            ipcRenderer.send('clic-traversant', false);
+        }
+
+        function fermerPanneauValidation() {
+            document.getElementById('panneau-validation').classList.remove('actif');
+            document.getElementById('pv-apercu').innerHTML = '<span class="cadenas">🔞</span>';
+        }
+
+        // L'utilisateur choisit d'afficher malgré l'alerte
+        function validerMediaSensible() {
+            const charge = chargeEnAttente;
+            chargeEnAttente = null;
+            fermerPanneauValidation();
+            // Si les réglages ne sont pas ouverts, on rend de nouveau la fenêtre traversante
+            const menu = document.getElementById('ecran-connexion');
+            if (!menu || menu.style.display === 'none') ipcRenderer.send('clic-traversant', true);
+            if (charge) afficherMedia(charge, true); // true = on saute le contrôle (déjà validé)
+        }
+
+        // L'utilisateur choisit d'ignorer le média
+        function rejeterMediaSensible() {
+            chargeEnAttente = null;
+            fermerPanneauValidation();
+            // On passe simplement à la suite de la file
+            mediaEnCours = false; ttsEnCours = false;
+            verifierFin();
+            // Si les réglages n'étaient pas ouverts, on rend de nouveau la fenêtre traversante
+            const menu = document.getElementById('ecran-connexion');
+            if (!menu || menu.style.display === 'none') ipcRenderer.send('clic-traversant', true);
+        }
+
+        function rejouerDernier() {
+            if (!dernierLiveChat) return;
+            // On ferme le panneau de réglages s'il est ouvert, sinon il cache le replay
+            const menu = document.getElementById('ecran-connexion');
+            if (menu && menu.style.display !== 'none') {
+                cacherMenuReglages(true);
+            }
+            fileDAttente.push(dernierLiveChat);
+            lireProchaineBlague();
+        }
+
+        function afficherMedia(charge, dejaValide) {
             const lienMedia = charge.lienMedia || "";
             const texte     = charge.texte || "";
             const options   = charge.options || {};
             const auteur    = charge.auteur || null;
+
+            // --- FILTRE DE NUDITÉ ---
+            // Si le filtre est prêt et que le média n'a pas déjà été validé manuellement,
+            // on analyse d'abord. Si sensible, on bascule en panneau de validation.
+            if (!dejaValide && filtreNuditeActif && nsfwPret && lienMedia) {
+                mediaEstSensible(charge).then((sensible) => {
+                    if (sensible) {
+                        demanderValidation(charge);
+                    } else {
+                        afficherMedia(charge, true); // ok, on affiche normalement
+                    }
+                });
+                return; // on attend le résultat de l'analyse
+            }
 
             enregistrerReplay(charge);
 
