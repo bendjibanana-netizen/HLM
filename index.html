@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Chat</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <!-- Filtre de nudité (analyse locale, aucune image n'est envoyée à un service externe) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/nsfwjs@4.3.0/dist/browser/nsfwjs.min.js"></script>
+    <!-- Filtre de nudité : chargé via require (Node.js) depuis le dossier de l'app.
+         Nécessite npm install nsfwjs dans le dossier de l'app. -->
+    <script>
+        try {
+            window._nsfwjs = require('nsfwjs');
+        } catch(e) {
+            window._nsfwjs = null;
+            console.warn('nsfwjs non installé — filtre de nudité inactif. Lancer : npm install nsfwjs');
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
@@ -1172,13 +1179,17 @@
             // Filtre de nudité : activé par défaut, sauf si désactivé précédemment
             filtreNuditeActif = localStorage.getItem('filtreNudite') !== '0';
             document.getElementById('toggle-filtre').checked = filtreNuditeActif;
-            if (filtreNuditeActif) chargerModeleNsfw();
             majEtatFiltre();
-            // On rafraîchit l'état du filtre une fois le modèle chargé
+            // On (re)tente le chargement tant que le modèle n'est pas prêt :
+            // les scripts CDN (TensorFlow/NSFW.js) peuvent arriver après le DOMContentLoaded.
+            let essais = 0;
             const verifFiltre = setInterval(() => {
+                essais++;
+                if (filtreNuditeActif && !nsfwPret && !nsfwEnChargement) chargerModeleNsfw();
                 majEtatFiltre();
-                if (nsfwPret || typeof nsfwjs === 'undefined') clearInterval(verifFiltre);
-            }, 800);
+                // On arrête de réessayer une fois prêt, ou après ~30s (les libs ne viendront plus)
+                if (nsfwPret || essais > 60) clearInterval(verifFiltre);
+            }, 500);
 
             const couleurSauvee = localStorage.getItem('couleurMenu') || '#39ff14';
             construirePalette();
@@ -1359,14 +1370,14 @@
             majEtatFiltre();
         }
 
-        // Affiche l'état réel du filtre (prêt, en chargement, indisponible)
+        // Affiche l'état réel du filtre (prêt, en chargement, erreur)
         function majEtatFiltre() {
             const el = document.getElementById('etat-filtre');
             if (!el) return;
             if (!filtreNuditeActif) { el.textContent = ''; return; }
             if (nsfwPret) el.textContent = '✓ Analyse active (images et vidéos)';
-            else if (nsfwEnChargement) el.textContent = '⏳ Chargement du filtre…';
-            else if (typeof nsfwjs === 'undefined') el.textContent = '⚠️ Filtre indisponible (hors ligne au démarrage)';
+            else if (nsfwEnChargement) el.textContent = '⏳ Chargement du modèle…';
+            else if (nsfwErreur) el.textContent = '⚠️ ' + nsfwErreur + ' (les médias passent sans filtre)';
             else el.textContent = '⏳ Initialisation…';
         }
 
@@ -1893,21 +1904,24 @@
         let nsfwEnChargement = false;
         let chargeEnAttente = null; // le livechat en attente de validation
 
+        let nsfwErreur = ''; // dernier message d'erreur, pour l'afficher
+
         async function chargerModeleNsfw() {
             if (nsfwPret || nsfwEnChargement) return;
-            if (typeof nsfwjs === 'undefined') return; // librairie pas chargée (hors ligne)
-            nsfwEnChargement = true;
-            try {
-                // En v4, le modèle MobileNetV2 est embarqué dans le bundle navigateur :
-                // load() sans argument l'utilise directement, sans requête réseau supplémentaire.
-                modeleNsfw = await nsfwjs.load();
-                nsfwPret = true;
-            } catch (e) {
-                // échec éventuel : le filtre reste inactif, les médias passent normalement
-                console.warn('Filtre de nudité indisponible :', e.message);
+            const lib = window._nsfwjs;
+            if (!lib) {
+                nsfwErreur = 'nsfwjs non installé — lance : npm install nsfwjs';
+                majEtatFiltre(); return;
             }
-            nsfwEnChargement = false;
-            majEtatFiltre();
+            nsfwEnChargement = true; majEtatFiltre();
+            try {
+                modeleNsfw = await lib.load();
+                nsfwPret = true; nsfwErreur = '';
+            } catch (e) {
+                nsfwErreur = e.message || 'échec du chargement du modèle';
+                console.warn('Filtre de nudité indisponible :', e);
+            }
+            nsfwEnChargement = false; majEtatFiltre();
         }
 
         // Seuils "équilibrés" : on signale si le contenu est nettement explicite,
