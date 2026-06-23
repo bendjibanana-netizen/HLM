@@ -1,4 +1,1 @@
-{
-  "version": 13,
-  "fichiers": ["index.html", "main.js", "parametres.html"]
-}
+{"version": 14, "fichiers": ["index.html", "main.js", "parametres.html", "lancer.bat"]}
