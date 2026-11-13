@@ -11,6 +11,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { RoleGlobal } from "@/lib/permissions";
 import { exigerConnexion } from "@/lib/session";
 import { equipesDe } from "@/server/acces";
+import { FormulaireProfil } from "@/components/communaute/formulaire-profil";
 import { LienBouton } from "@/components/ui/bouton";
 import { aAuMoinsLeRole } from "@/lib/permissions";
 
@@ -28,6 +29,7 @@ export default async function PageCompte() {
   const format = await getFormatter();
   const role = compte.role as RoleGlobal;
   const tNav = await getTranslations("Navigation");
+  const tCommu = await getTranslations("Communaute");
   const dansUneEquipe = (await equipesDe(compte.id)).length > 0;
 
   return (
@@ -84,6 +86,14 @@ export default async function PageCompte() {
           />
         </Carte>
       )}
+
+      <Carte className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold">{tCommu("profil.modifier")}</h2>
+        <FormulaireProfil nom={compte.name} bio={compte.bio ?? ""} />
+        <LienBouton href={{ pathname: "/u/[pseudo]", params: { pseudo: compte.pseudo ?? "" } }} variante="discret" taille="sm" className="-ml-3.5 self-start">
+          {tCommu("profil.voirProfil")}
+        </LienBouton>
+      </Carte>
 
       <Carte className="flex flex-col gap-4">
         <h2 className="text-lg font-bold">{t("preferences")}</h2>

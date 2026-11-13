@@ -3,6 +3,8 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Maximize, Minimize, Settings2, SkipBack, SkipForward } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as EvenementPointeur } from "react";
+import { Commentaires } from "@/components/communaute/commentaires";
+import { Signalement } from "@/components/communaute/signalement";
 import { Bouton, LienBouton } from "@/components/ui/bouton";
 import { Feuille } from "@/components/ui/feuille";
 import { Segments } from "@/components/ui/segments";
@@ -23,6 +25,9 @@ export type PageLecteur = {
 type Proprietes = {
   serie: { slug: string; titre: string; sensLecture: "VERTICAL" | "DROITE_A_GAUCHE" | "GAUCHE_A_DROITE" };
   numero: string;
+  /** Identifiant du chapitre et nombre de commentaires ; absents en aperçu avant publication. */
+  chapitreId: string | null;
+  nbCommentaires: number;
   pages: PageLecteur[];
   /** Numéros des chapitres voisins, ou null aux extrémités. */
   precedent: string | null;
@@ -79,7 +84,7 @@ const abonnerPleinEcran = (rappel: () => void) => {
   return () => document.removeEventListener("fullscreenchange", rappel);
 };
 
-export function Lecteur({ serie, numero, pages, precedent, suivant, debutSuivant, positionServeur, connecte }: Proprietes) {
+export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, precedent, suivant, debutSuivant, positionServeur, connecte }: Proprietes) {
   const t = useTranslations("Lecteur");
   const total = pages.length;
 
@@ -283,6 +288,14 @@ export function Lecteur({ serie, numero, pages, precedent, suivant, debutSuivant
       <LienBouton href={lienSerie} variante="secondaire" pleineLargeur>
         {t("retour")}
       </LienBouton>
+      {chapitreId && (
+        <>
+          <div className="mt-4 w-full">
+            <Commentaires chapitreId={chapitreId} nombre={nbCommentaires} />
+          </div>
+          <Signalement cible="CHAPITRE" id={chapitreId} discret />
+        </>
+      )}
     </div>
   );
 
@@ -328,7 +341,7 @@ export function Lecteur({ serie, numero, pages, precedent, suivant, debutSuivant
       ) : (
         <main className="absolute inset-0 touch-pan-y select-none" onPointerDown={surAppui} onPointerUp={surRelachement}>
           {index >= total ? (
-            <div className="flex h-full items-center" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>
+            <div className="h-full overflow-y-auto pt-entete pb-20 select-text" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>
               {finDeChapitre}
             </div>
           ) : (

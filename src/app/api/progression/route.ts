@@ -53,5 +53,14 @@ export async function POST(requete: Request) {
     update: position,
     create: { userId: session.user.id, serieId: chapitre.serieId, ...position },
   });
+
+  if (termine) {
+    const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const dejaNote = await db.entreeJournal.findFirst({ where: { userId: session.user.id, chapitreId: chapitre.id, luLe: { gte: depuis } }, select: { id: true } });
+    if (!dejaNote) {
+      await db.entreeJournal.create({ data: { userId: session.user.id, serieId: chapitre.serieId, chapitreId: chapitre.id } });
+      await db.activite.create({ data: { userId: session.user.id, type: "LECTURE", serieId: chapitre.serieId, chapitreId: chapitre.id } });
+    }
+  }
   return new NextResponse(null, { status: 204 });
 }

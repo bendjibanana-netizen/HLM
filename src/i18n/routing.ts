@@ -13,6 +13,8 @@ export const routing = defineRouting({
     "/serie/[slug]": { fr: "/serie/[slug]", en: "/series/[slug]" },
     "/lire/[slug]/[numero]": { fr: "/lire/[slug]/[numero]", en: "/read/[slug]/[numero]" },
     "/bibliotheque": { fr: "/bibliotheque", en: "/library" },
+    "/u/[pseudo]": "/u/[pseudo]",
+    "/u/[pseudo]/liste/[slug]": { fr: "/u/[pseudo]/liste/[slug]", en: "/u/[pseudo]/list/[slug]" },
     "/compte": { fr: "/compte", en: "/account" },
     "/connexion": { fr: "/connexion", en: "/login" },
     "/inscription": { fr: "/inscription", en: "/signup" },

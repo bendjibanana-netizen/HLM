@@ -68,6 +68,8 @@ export default async function PageLecture({ params }: PageProps<"/[locale]/lire/
       key={`${slug}-${numero}`}
       serie={{ slug: serie.slug, titre: serie.titre, sensLecture: serie.sensLecture }}
       numero={numero}
+      chapitreId={chapitre.statut === "PUBLIE" ? chapitre.id : null}
+      nbCommentaires={chapitre.nbCommentaires}
       pages={pages}
       precedent={precedent?.numero.toString() ?? null}
       suivant={suivant?.numero.toString() ?? null}

@@ -14,6 +14,12 @@ import { Link } from "@/i18n/navigation";
 import { cleVariante, urlImage } from "@/lib/images/variantes";
 import { obtenirSession } from "@/lib/session";
 import { peutPrevisualiser } from "@/server/acces";
+import { ActionsSerie } from "@/components/communaute/actions-serie";
+import { Critiques } from "@/components/communaute/critiques";
+import { Signalement } from "@/components/communaute/signalement";
+import { getPathname } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
+import { critiquesDeLaSerie, etatLecteur } from "@/server/communaute";
 import { serieParSlug } from "@/server/catalogue";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/serie/[slug]">): Promise<Metadata> {
@@ -55,6 +61,8 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
   const dernier = chapitres[0];
   // Les visiteurs ne lisent que les séries tout public ; les autres demandent un compte.
   const compteRequis = serie.classification !== "TOUT_PUBLIC" && !session;
+  const etat = session ? await etatLecteur(session.user.id, serie.id) : null;
+  const critiques = await critiquesDeLaSerie(serie.id, session?.user.id);
   const noteSur5 = format.number(serie.noteMoyenne / 2, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   const infos: { libelle: string; valeur: ReactNode }[] = [
@@ -127,6 +135,14 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
           {t("Serie.compteRequis")}
         </p>
       )}
+      {!enApercu && (
+        <ActionsSerie
+          serieId={serie.id}
+          connecte={Boolean(session)}
+          initial={{ note: etat?.note ?? null, suivi: etat?.suivi ?? false, statut: etat?.statut ?? null, listes: etat?.listes ?? [] }}
+          suiteConnexion={getPathname({ href: { pathname: "/serie/[slug]", params: { slug } }, locale: locale as Locale })}
+        />
+      )}
 
       <section aria-labelledby="titre-synopsis" className="flex flex-col gap-2">
         <h2 id="titre-synopsis" className="text-xl font-bold">
@@ -157,6 +173,14 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
       </dl>
 
       <ListeChapitres slug={slug} chapitres={chapitres} />
+      {!enApercu && (
+        <>
+          <Critiques serieId={serie.id} critiques={critiques} maCritique={etat?.critique ?? null} connecte={Boolean(session)} />
+          <div className="flex justify-end border-t border-bordure pt-2">
+            <Signalement cible="SERIE" id={serie.id} />
+          </div>
+        </>
+      )}
     </article>
   );
 

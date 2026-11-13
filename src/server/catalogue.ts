@@ -123,6 +123,8 @@ export async function chapitrePourLecture(slug: string, numero: string, apercu =
       id: true,
       numero: true,
       titre: true,
+      statut: true,
+      nbCommentaires: true,
       pages: { orderBy: { ordre: "asc" }, select: { id: true, largeur: true, hauteur: true, variantes: true, apercuFlou: true } },
     },
   });
