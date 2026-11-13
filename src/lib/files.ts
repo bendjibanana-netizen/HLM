@@ -59,3 +59,12 @@ export async function demanderSynchronisation(sourceId: string, declencheeParId?
   // Un seul essai : un échec est déjà consigné dans l'historique, et la source repassera à l'heure prévue.
   await file(FILE_SYNC).add("executer", tache, { attempts: 1 });
 }
+
+export type TacheNotification = { type: "nouveau-chapitre"; chapitreId: string };
+
+/** Prévient les lecteurs qui suivent la série qu'un chapitre vient de sortir. */
+export async function demanderNotificationChapitre(chapitreId: string): Promise<void> {
+  const tache: TacheNotification = { type: "nouveau-chapitre", chapitreId };
+  // jobId : un chapitre n'est annoncé qu'une fois, même si sa publication est rejouée.
+  await file(FILE_NOTIFICATIONS).add("nouveau-chapitre", tache, { jobId: `chapitre-${chapitreId}` });
+}

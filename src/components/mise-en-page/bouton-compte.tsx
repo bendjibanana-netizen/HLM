@@ -2,6 +2,7 @@
 
 import { LogIn } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { classesBouton } from "@/components/ui/bouton";
 import { Link } from "@/i18n/navigation";
@@ -15,6 +16,21 @@ import { cn } from "@/lib/cn";
 export function BoutonCompte() {
   const t = useTranslations("Navigation");
   const { data: session, isPending: enAttente } = authClient.useSession();
+  const [nonLues, setNonLues] = useState(0);
+  const connecte = Boolean(session);
+
+  // Pastille : nombre de notifications non lues, demandé une fois la session connue.
+  useEffect(() => {
+    if (!connecte) return;
+    let annule = false;
+    fetch("/api/notifications")
+      .then((reponse) => reponse.json())
+      .then((donnees: { nonLues: number }) => !annule && setNonLues(donnees.nonLues))
+      .catch(() => {});
+    return () => {
+      annule = true;
+    };
+  }, [connecte]);
 
   // Emplacement de taille fixe : l'en-tête ne bouge pas quand la session arrive.
   if (enAttente) {
@@ -23,8 +39,9 @@ export function BoutonCompte() {
 
   if (session) {
     return (
-      <Link href="/compte" aria-label={t("monCompte")} className="shrink-0 rounded-full">
+      <Link href={nonLues > 0 ? "/notifications" : "/compte"} aria-label={nonLues > 0 ? `${t("notifications")} (${nonLues})` : t("monCompte")} className="relative shrink-0 rounded-full">
         <Avatar nom={session.user.name} image={session.user.image} />
+        {nonLues > 0 && <span className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full border-2 border-fond bg-accent" aria-hidden />}
       </Link>
     );
   }

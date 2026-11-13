@@ -16,7 +16,9 @@
     "rechercher": "Search",
     "recherchePlaceholder": "Series, author, team…",
     "equipe": "Team space",
-    "admin": "Administration"
+    "admin": "Administration",
+    "notifications": "Notifications",
+    "horsLigne": "Offline"
   },
   "Theme": {
     "libelle": "Theme",
@@ -689,5 +691,42 @@
       "INTERDIT": "Only the team lead can edit these details.",
       "DEFAUT": "Saving failed."
     }
+  },
+  "Notifications": {
+    "titre": "Notifications",
+    "aucune": "No notifications yet.",
+    "nouveauChapitre": "{serie}: chapter {numero} is out",
+    "toutLu": "Mark all as read",
+    "nonLues": "{nombre, plural, one {# unread notification} other {# unread notifications}}",
+    "preferences": "Notifications",
+    "prefIntro": "When a new chapter of a followed series is released:",
+    "site": "On the site",
+    "push": "On this device (push notification)",
+    "email": "By email",
+    "enregistrer": "Save",
+    "enregistre": "Preferences saved.",
+    "activerPush": "Enable notifications on this device",
+    "pushActif": "Notifications enabled on this device.",
+    "pushRefuse": "Notifications are blocked in your browser settings.",
+    "pushIndisponible": "Push notifications are not available in this browser or not configured on the server.",
+    "desactiverPush": "Disable on this device",
+    "emailSujet": "{serie} — chapter {numero} available",
+    "emailTitre": "New chapter",
+    "emailCorps": "Chapter {numero} of “{serie}” has just been released.",
+    "emailBouton": "Read the chapter",
+    "emailNote": "You receive this email because you follow this series. Adjust your notifications from the Account page."
+  },
+  "HorsLigne": {
+    "titre": "Offline",
+    "telecharger": "Download to read offline",
+    "telechargement": "Downloading… {courant}/{total}",
+    "telecharge": "Available offline",
+    "supprimer": "Remove",
+    "vide": "No downloaded chapter. In the reader, open the settings then “Download to read offline”.",
+    "sansConnexion": "You are offline",
+    "sansConnexionAide": "Here are the chapters downloaded on this device.",
+    "indisponible": "Offline reading is not available in this browser.",
+    "chapitre": "Chapter {numero}",
+    "echec": "The download failed."
   }
 }

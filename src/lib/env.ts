@@ -34,6 +34,10 @@ const schema = z.object({
   S3_ACCESS_KEY_ID: z.string().default("cle-acces-dev"),
   S3_SECRET_ACCESS_KEY: z.string().default("cle-secrete-dev"),
 
+  // Notifications push (facultatif) : générer la paire avec « npx web-push generate-vapid-keys »
+  NEXT_PUBLIC_VAPID_CLE_PUBLIQUE: optionnelle,
+  VAPID_CLE_PRIVEE: optionnelle,
+
   REDIS_URL: z.string().default("redis://localhost:6379"),
 
   MEILISEARCH_URL: z.url().default("http://localhost:7700"),

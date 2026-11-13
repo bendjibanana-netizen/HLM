@@ -16,7 +16,9 @@
     "rechercher": "Rechercher",
     "recherchePlaceholder": "Série, auteur, équipe…",
     "equipe": "Espace équipe",
-    "admin": "Administration"
+    "admin": "Administration",
+    "notifications": "Notifications",
+    "horsLigne": "Hors-ligne"
   },
   "Theme": {
     "libelle": "Thème",
@@ -863,5 +865,42 @@
       "INTERDIT": "Seul le chef d'équipe peut modifier ces informations.",
       "DEFAUT": "L'enregistrement a échoué."
     }
+  },
+  "Notifications": {
+    "titre": "Notifications",
+    "aucune": "Aucune notification pour le moment.",
+    "nouveauChapitre": "{serie} : le chapitre {numero} est sorti",
+    "toutLu": "Tout marquer comme lu",
+    "nonLues": "{nombre, plural, one {# notification non lue} other {# notifications non lues}}",
+    "preferences": "Notifications",
+    "prefIntro": "Quand un nouveau chapitre d'une série suivie sort :",
+    "site": "Sur le site",
+    "push": "Sur cet appareil (notification push)",
+    "email": "Par email",
+    "enregistrer": "Enregistrer",
+    "enregistre": "Préférences enregistrées.",
+    "activerPush": "Activer les notifications sur cet appareil",
+    "pushActif": "Notifications activées sur cet appareil.",
+    "pushRefuse": "Les notifications sont bloquées dans les réglages de votre navigateur.",
+    "pushIndisponible": "Les notifications push ne sont pas disponibles sur ce navigateur ou ne sont pas configurées sur le serveur.",
+    "desactiverPush": "Désactiver sur cet appareil",
+    "emailSujet": "{serie} — chapitre {numero} disponible",
+    "emailTitre": "Nouveau chapitre",
+    "emailCorps": "Le chapitre {numero} de « {serie} » vient de sortir.",
+    "emailBouton": "Lire le chapitre",
+    "emailNote": "Vous recevez cet email car vous suivez cette série. Réglez vos notifications depuis la page Compte."
+  },
+  "HorsLigne": {
+    "titre": "Hors-ligne",
+    "telecharger": "Télécharger pour lire hors-ligne",
+    "telechargement": "Téléchargement… {courant}/{total}",
+    "telecharge": "Disponible hors-ligne",
+    "supprimer": "Supprimer",
+    "vide": "Aucun chapitre téléchargé. Dans le lecteur, ouvrez les réglages puis « Télécharger pour lire hors-ligne ».",
+    "sansConnexion": "Vous êtes hors connexion",
+    "sansConnexionAide": "Voici les chapitres téléchargés sur cet appareil.",
+    "indisponible": "La lecture hors-ligne n'est pas disponible sur ce navigateur.",
+    "chapitre": "Chapitre {numero}",
+    "echec": "Le téléchargement a échoué."
   }
 }

@@ -16,6 +16,8 @@ export const routing = defineRouting({
     "/u/[pseudo]": "/u/[pseudo]",
     "/u/[pseudo]/liste/[slug]": { fr: "/u/[pseudo]/liste/[slug]", en: "/u/[pseudo]/list/[slug]" },
     "/compte": { fr: "/compte", en: "/account" },
+    "/notifications": "/notifications",
+    "/hors-ligne": { fr: "/hors-ligne", en: "/offline" },
     "/connexion": { fr: "/connexion", en: "/login" },
     "/inscription": { fr: "/inscription", en: "/signup" },
     "/mot-de-passe-oublie": { fr: "/mot-de-passe-oublie", en: "/forgot-password" },

@@ -11,6 +11,8 @@ import { getPathname } from "@/i18n/navigation";
 import type { RoleGlobal } from "@/lib/permissions";
 import { exigerConnexion } from "@/lib/session";
 import { equipesDe } from "@/server/acces";
+import { ReglagesNotifications } from "@/components/notifications/reglages";
+import { db } from "@/lib/db";
 import { FormulaireProfil } from "@/components/communaute/formulaire-profil";
 import { LienBouton } from "@/components/ui/bouton";
 import { aAuMoinsLeRole } from "@/lib/permissions";
@@ -30,6 +32,8 @@ export default async function PageCompte() {
   const role = compte.role as RoleGlobal;
   const tNav = await getTranslations("Navigation");
   const tCommu = await getTranslations("Communaute");
+  const tNotif = await getTranslations("Notifications");
+  const preferences = await db.preferenceNotification.findUnique({ where: { userId: compte.id } });
   const dansUneEquipe = (await equipesDe(compte.id)).length > 0;
 
   return (
@@ -93,6 +97,17 @@ export default async function PageCompte() {
         <LienBouton href={{ pathname: "/u/[pseudo]", params: { pseudo: compte.pseudo ?? "" } }} variante="discret" taille="sm" className="-ml-3.5 self-start">
           {tCommu("profil.voirProfil")}
         </LienBouton>
+      </Carte>
+
+      <Carte className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">{tNotif("preferences")}</h2>
+          <LienBouton href="/notifications" variante="discret" taille="sm">{tNotif("titre")}</LienBouton>
+        </div>
+        <ReglagesNotifications
+          initiales={{ chapitreSite: preferences?.chapitreSite ?? true, chapitrePush: preferences?.chapitrePush ?? true, chapitreEmail: preferences?.chapitreEmail ?? false }}
+          cleVapid={process.env.NEXT_PUBLIC_VAPID_CLE_PUBLIQUE || null}
+        />
       </Carte>
 
       <Carte className="flex flex-col gap-4">

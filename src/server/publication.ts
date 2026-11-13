@@ -1,6 +1,7 @@
 // Publication des chapitres : passage au statut « publié » et mise à jour de ce qui en dépend.
 import "server-only";
 import { db } from "@/lib/db";
+import { demanderNotificationChapitre } from "@/lib/files";
 import { indexerSerie } from "@/lib/recherche/series";
 
 /** Recalcule les compteurs de chapitres d'une série à partir de ses chapitres publiés. */
@@ -25,6 +26,8 @@ export async function publierChapitre(chapitreId: string): Promise<boolean> {
 
   await db.chapitre.update({ where: { id: chapitreId }, data: { statut: "PUBLIE", publieLe: new Date(), programmePour: null } });
   await recalculerSerie(chapitre.serieId);
+  // Les notifications partent en arrière-plan : une panne de la file ne bloque pas la publication.
+  await demanderNotificationChapitre(chapitreId).catch((erreur) => console.error("[notifications] mise en file impossible :", erreur));
   return true;
 }
 
