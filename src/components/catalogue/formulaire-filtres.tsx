@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { classesBouton } from "@/components/ui/bouton";
 import { Link } from "@/i18n/navigation";
@@ -31,6 +31,7 @@ function Groupe({ titre, children }: { titre: string; children: ReactNode }) {
  */
 export function FormulaireFiltres({ action, criteres, genres }: { action: string; criteres: Criteres; genres: Genre[] }) {
   const t = useTranslations();
+  const format = useFormatter();
 
   return (
     <form action={action} method="get" className="flex flex-col gap-5">
@@ -86,7 +87,7 @@ export function FormulaireFiltres({ action, criteres, genres }: { action: string
         {/* Valeurs sur 10 : 6 = 3 étoiles, 8 = 4 étoiles */}
         {[0, 6, 7, 8, 9].map((note) => (
           <Pastille key={note} type="radio" nom="note" valeur={String(note)} coche={criteres.noteMin === note}>
-            {note === 0 ? t("Catalogue.noteToutes") : t("Catalogue.noteMin", { etoiles: `${(note / 2).toLocaleString("fr-FR")} ★` })}
+            {note === 0 ? t("Catalogue.noteToutes") : t("Catalogue.noteMin", { etoiles: `${format.number(note / 2)} ★` })}
           </Pastille>
         ))}
       </Groupe>

@@ -19,6 +19,7 @@ type Critique = {
 
 function CarteCritique({ critique, connecte }: { critique: Critique; connecte: boolean }) {
   const t = useTranslations("Communaute");
+  const tSerie = useTranslations("Serie");
   const format = useFormatter();
   const [revelee, setRevelee] = useState(!critique.spoiler);
   const [jaime, setJaime] = useState({ aime: critique.aime, nombre: critique.nbLikes });
@@ -36,7 +37,7 @@ function CarteCritique({ critique, connecte }: { critique: Critique; connecte: b
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Auteur compte={critique.user} />
         <div className="flex items-center gap-2 text-sm text-texte-doux">
-          {critique.note !== null && <Etoiles note={critique.note} libelle={`${critique.note / 2} / 5`} taille="sm" />}
+          {critique.note !== null && <Etoiles note={critique.note} libelle={tSerie("note", { note: format.number(critique.note / 2) })} taille="sm" />}
           <time dateTime={critique.creeLe}>{format.dateTime(new Date(critique.creeLe), { dateStyle: "medium" })}</time>
         </div>
       </div>

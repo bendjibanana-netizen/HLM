@@ -3,6 +3,10 @@
 /** Transforme un texte en identifiant d'URL : minuscules, sans accents, mots séparés par des tirets. */
 export function enSlug(texte: string): string {
   return texte
+    // Ligatures et lettres sans décomposition Unicode : « cœur » doit donner « coeur », pas « c-ur ».
+    .replace(/œ/gi, "oe")
+    .replace(/æ/gi, "ae")
+    .replace(/ß/g, "ss")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

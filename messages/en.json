@@ -506,12 +506,12 @@
       "journalVide": "No finished chapter yet."
     },
     "activite": {
-      "NOTE": "{nom} rated {serie}",
-      "CRITIQUE": "{nom} reviewed {serie}",
-      "AJOUT_LISTE": "{nom} added {serie} to the list “{liste}”",
-      "LECTURE": "{nom} read chapter {numero} of {serie}",
-      "SUIVI_SERIE": "{nom} follows {serie}",
-      "SUIVI_UTILISATEUR": "{nom} follows {cible}"
+      "NOTE": "<nom></nom> rated <serie></serie>",
+      "CRITIQUE": "<nom></nom> reviewed <serie></serie>",
+      "AJOUT_LISTE": "<nom></nom> added <serie></serie> to the list “{liste}”",
+      "LECTURE": "<nom></nom> read chapter {numero} of <serie></serie>",
+      "SUIVI_SERIE": "<nom></nom> follows <serie></serie>",
+      "SUIVI_UTILISATEUR": "<nom></nom> follows <cible></cible>"
     },
     "bibliotheque": {
       "titre": "Library",

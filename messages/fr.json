@@ -545,12 +545,12 @@
       "journalVide": "Aucun chapitre terminé pour le moment."
     },
     "activite": {
-      "NOTE": "{nom} a noté {serie}",
-      "CRITIQUE": "{nom} a publié une critique de {serie}",
-      "AJOUT_LISTE": "{nom} a ajouté {serie} à la liste « {liste} »",
-      "LECTURE": "{nom} a lu le chapitre {numero} de {serie}",
-      "SUIVI_SERIE": "{nom} suit {serie}",
-      "SUIVI_UTILISATEUR": "{nom} suit {cible}"
+      "NOTE": "<nom></nom> a noté <serie></serie>",
+      "CRITIQUE": "<nom></nom> a publié une critique de <serie></serie>",
+      "AJOUT_LISTE": "<nom></nom> a ajouté <serie></serie> à la liste « {liste} »",
+      "LECTURE": "<nom></nom> a lu le chapitre {numero} de <serie></serie>",
+      "SUIVI_SERIE": "<nom></nom> suit <serie></serie>",
+      "SUIVI_UTILISATEUR": "<nom></nom> suit <cible></cible>"
     },
     "bibliotheque": {
       "titre": "Bibliothèque",

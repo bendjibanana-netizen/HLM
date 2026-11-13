@@ -49,6 +49,8 @@ describe("texte", () => {
     expect(enSlug("Les Veilleurs de brume")).toBe("les-veilleurs-de-brume");
     expect(enSlug("  Zéro Faute !  ")).toBe("zero-faute");
     expect(enSlug("日本語")).toBe("");
+    expect(enSlug("Coups de cœur")).toBe("coups-de-coeur");
+    expect(enSlug("Œuvres & Ægis")).toBe("oeuvres-aegis");
   });
 
   it("comparerNaturel trie page2 avant page10", () => {

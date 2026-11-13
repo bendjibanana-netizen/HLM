@@ -47,7 +47,7 @@ function Saisie({ placeholder, libelle, onEnvoyer, onAnnuler }: { placeholder: s
   );
 }
 
-function Ligne({ commentaire, connecte, onRepondre, onSupprimer }: { commentaire: Commentaire; connecte: boolean; onRepondre?: () => void; onSupprimer: () => void }) {
+function Ligne({ commentaire, connecte, maintenant, onRepondre, onSupprimer }: { commentaire: Commentaire; connecte: boolean; maintenant: number; onRepondre?: () => void; onSupprimer: () => void }) {
   const t = useTranslations("Communaute");
   const format = useFormatter();
   const [jaime, setJaime] = useState({ aime: commentaire.aime, nombre: commentaire.nbLikes });
@@ -64,7 +64,7 @@ function Ligne({ commentaire, connecte, onRepondre, onSupprimer }: { commentaire
       <div className="flex items-center justify-between gap-2 text-sm">
         <Auteur compte={commentaire.user} />
         <time dateTime={commentaire.creeLe} className="shrink-0 text-xs text-texte-doux">
-          {format.relativeTime(new Date(commentaire.creeLe))}
+          {format.relativeTime(new Date(commentaire.creeLe), maintenant)}
         </time>
       </div>
       <p className="pl-10 whitespace-pre-line">{commentaire.contenu}</p>
@@ -103,12 +103,15 @@ export function Commentaires({ chapitreId, nombre }: { chapitreId: string; nombr
   const [connecte, setConnecte] = useState(false);
   const [reponseA, setReponseA] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
+  // Heure de référence des dates relatives (« il y a 2 minutes ») : celle du dernier chargement.
+  const [maintenant, setMaintenant] = useState(0);
 
   const charger = useCallback(async () => {
     setChargement(true);
     const donnees = (await fetch(`/api/commentaires?chapitre=${chapitreId}`).then((r) => r.json()).catch(() => null)) as { commentaires: Fil[]; connecte: boolean } | null;
     setFils(donnees?.commentaires ?? []);
     setConnecte(Boolean(donnees?.connecte));
+    setMaintenant(Date.now());
     setChargement(false);
   }, [chapitreId]);
 
@@ -145,11 +148,11 @@ export function Commentaires({ chapitreId, nombre }: { chapitreId: string; nombr
       <ul className="flex flex-col gap-4">
         {fils.map((fil) => (
           <li key={fil.id} className="flex flex-col gap-3">
-            <Ligne commentaire={fil} connecte={connecte} onRepondre={() => setReponseA(fil.id)} onSupprimer={() => supprimer(fil.id)} />
+            <Ligne commentaire={fil} connecte={connecte} maintenant={maintenant} onRepondre={() => setReponseA(fil.id)} onSupprimer={() => supprimer(fil.id)} />
             {(fil.reponses.length > 0 || reponseA === fil.id) && (
               <div className="ml-4 flex flex-col gap-3 border-l-2 border-bordure pl-3">
                 {fil.reponses.map((reponse) => (
-                  <Ligne key={reponse.id} commentaire={reponse} connecte={connecte} onSupprimer={() => supprimer(reponse.id)} />
+                  <Ligne key={reponse.id} commentaire={reponse} connecte={connecte} maintenant={maintenant} onSupprimer={() => supprimer(reponse.id)} />
                 ))}
                 {reponseA === fil.id && <Saisie placeholder={t("reponsePlaceholder")} libelle={t("repondre")} onEnvoyer={(contenu) => envoyer(contenu, fil.id)} onAnnuler={() => setReponseA(null)} />}
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, BellRing, ListPlus, Star } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Bouton, LienBouton } from "@/components/ui/bouton";
 import { Champ } from "@/components/ui/champ";
@@ -16,6 +16,7 @@ const STATUTS: TypeStatut[] = ["A_LIRE", "EN_COURS", "TERMINE", "ABANDONNE"];
 
 /** Sélecteur de note à la demi-étoile : dix zones cliquables, deux par étoile. */
 function SelecteurNote({ valeur, onChange, libelle }: { valeur: number | null; onChange: (valeur: number) => void; libelle: (note: string) => string }) {
+  const format = useFormatter();
   const [survol, setSurvol] = useState<number | null>(null);
   const affichee = survol ?? valeur ?? 0;
   return (
@@ -35,7 +36,7 @@ function SelecteurNote({ valeur, onChange, libelle }: { valeur: number | null; o
                 type="button"
                 role="radio"
                 aria-checked={valeur === note}
-                aria-label={libelle((note / 2).toLocaleString())}
+                aria-label={libelle(format.number(note / 2))}
                 onPointerEnter={(e) => e.pointerType === "mouse" && setSurvol(note)}
                 onClick={() => onChange(note)}
                 className={cn("absolute inset-y-0 w-1/2", demi === 1 ? "left-0" : "right-0")}

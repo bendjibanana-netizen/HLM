@@ -3,7 +3,7 @@
 Plateforme web de lecture de BD numériques, publiées par des équipes et des auteurs invités,
 avec une dimension communautaire (notes, critiques, listes). Mobile d'abord.
 
-**État : phases 1 à 3 terminées** (socle, catalogue, recherche, lecteur, espace équipe).
+**État : phases 1 à 4 terminées** (socle, catalogue, recherche, lecteur, espace équipe, communauté).
 
 ## Démarrer en local
 
