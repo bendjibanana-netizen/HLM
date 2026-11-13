@@ -82,36 +82,43 @@ export function sortiesDeLaSemaine() {
   });
 }
 
-/** Fiche complète d'une série avec ses chapitres publiés. */
-export function serieParSlug(slug: string) {
+/** Chapitres montrés en aperçu : tout ce qui a des planches traitées, publié ou non. */
+const CHAPITRE_APERCU = { statut: { in: ["PUBLIE", "PROGRAMME", "BROUILLON"] }, nbPages: { gt: 0 } } satisfies Prisma.ChapitreWhereInput;
+
+/**
+ * Fiche complète d'une série avec ses chapitres publiés.
+ * `apercu` : montre aussi une série non validée et ses chapitres non publiés (équipe, modération).
+ */
+export function serieParSlug(slug: string, apercu = false) {
   return db.serie.findFirst({
-    where: { slug, ...SERIE_VISIBLE },
+    where: { slug, ...(apercu ? {} : SERIE_VISIBLE) },
     include: {
       equipe: { select: { slug: true, nom: true } },
       auteurs: { select: { role: true, auteur: { select: { slug: true, nom: true } } } },
       genres: { select: { genre: { select: { slug: true, nomFr: true, nomEn: true } } } },
       chapitres: {
-        where: chapitreVisible(),
+        where: apercu ? CHAPITRE_APERCU : chapitreVisible(),
         orderBy: { numero: "desc" },
-        select: { id: true, numero: true, titre: true, publieLe: true, nbPages: true },
+        select: { id: true, numero: true, titre: true, publieLe: true, nbPages: true, statut: true },
       },
     },
   });
 }
 
 /** Un chapitre prêt à lire : ses planches, la série et les numéros des chapitres voisins. */
-export async function chapitrePourLecture(slug: string, numero: string) {
+export async function chapitrePourLecture(slug: string, numero: string, apercu = false) {
   // Le numéro vient de l'URL : on n'accepte qu'un nombre de la forme 12 ou 12.5.
   if (!/^\d{1,5}(\.\d{1,2})?$/.test(numero)) return null;
 
   const serie = await db.serie.findFirst({
-    where: { slug, ...SERIE_VISIBLE },
+    where: { slug, ...(apercu ? {} : SERIE_VISIBLE) },
     select: { id: true, slug: true, titre: true, sensLecture: true, classification: true, type: true },
   });
   if (!serie) return null;
+  const visible = apercu ? CHAPITRE_APERCU : chapitreVisible();
 
   const chapitre = await db.chapitre.findFirst({
-    where: { serieId: serie.id, numero, ...chapitreVisible() },
+    where: { serieId: serie.id, numero, ...visible },
     select: {
       id: true,
       numero: true,
@@ -123,12 +130,12 @@ export async function chapitrePourLecture(slug: string, numero: string) {
 
   const [precedent, suivant] = await Promise.all([
     db.chapitre.findFirst({
-      where: { serieId: serie.id, numero: { lt: chapitre.numero }, ...chapitreVisible() },
+      where: { serieId: serie.id, numero: { lt: chapitre.numero }, ...visible },
       orderBy: { numero: "desc" },
       select: { numero: true },
     }),
     db.chapitre.findFirst({
-      where: { serieId: serie.id, numero: { gt: chapitre.numero }, ...chapitreVisible() },
+      where: { serieId: serie.id, numero: { gt: chapitre.numero }, ...visible },
       orderBy: { numero: "asc" },
       // Les deux premières planches du chapitre suivant sont préchargées en fin de lecture.
       select: { numero: true, pages: { orderBy: { ordre: "asc" }, take: 2, select: { variantes: true } } },

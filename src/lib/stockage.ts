@@ -3,6 +3,7 @@ import "server-only";
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
   HeadBucketCommand,
   ListObjectsV2Command,
   PutBucketPolicyCommand,
@@ -20,7 +21,13 @@ const s3 = new S3Client({
 });
 
 /**
- * Crée le bucket s'il n'existe pas et autorise la lecture publique des fichiers.
+ * Dossiers lisibles par tous (images affichées sur le site). Tout le reste — fichiers originaux
+ * envoyés par les équipes, preuves d'autorisation — n'est accessible qu'au serveur.
+ */
+export const DOSSIERS_PUBLICS = ["demo", "series", "equipes"] as const;
+
+/**
+ * Crée le bucket s'il n'existe pas et autorise la lecture publique des dossiers d'images.
  * Utile en local uniquement : en production, le bucket et son domaine public
  * sont configurés une fois chez l'hébergeur.
  */
@@ -37,7 +44,7 @@ export async function assurerBucket(): Promise<void> {
         Effect: "Allow",
         Principal: { AWS: ["*"] },
         Action: ["s3:GetObject"],
-        Resource: [`arn:aws:s3:::${env.S3_BUCKET}/*`],
+        Resource: DOSSIERS_PUBLICS.map((dossier) => `arn:aws:s3:::${env.S3_BUCKET}/${dossier}/*`),
       },
     ],
   };
@@ -58,6 +65,18 @@ export async function deposerFichier(cle: string, contenu: Buffer, typeMime: str
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
+}
+
+/** Lit un fichier du stockage (y compris dans les dossiers privés). */
+export async function lireFichier(cle: string): Promise<Buffer> {
+  const reponse = await s3.send(new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: cle }));
+  if (!reponse.Body) throw new Error(`Fichier introuvable dans le stockage : ${cle}`);
+  return Buffer.from(await reponse.Body.transformToByteArray());
+}
+
+/** Dépose un fichier privé (original envoyé par une équipe, preuve d'autorisation) : jamais mis en cache public. */
+export async function deposerFichierPrive(cle: string, contenu: Buffer, typeMime: string): Promise<void> {
+  await s3.send(new PutObjectCommand({ Bucket: env.S3_BUCKET, Key: cle, Body: contenu, ContentType: typeMime }));
 }
 
 /** Supprime tous les fichiers dont la clé commence par le préfixe (ex. « demo/ »). */

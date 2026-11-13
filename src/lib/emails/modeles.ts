@@ -57,3 +57,10 @@ export function emailReinitialisation(langue: LangueEmail, nom: string, url: str
   const sujet = t("sujet", { site: NOM_SITE });
   return { sujet, ...gabarit(t("titre", { nom }), t("corps"), t("bouton"), url, t("note")) };
 }
+
+export function emailInvitation(langue: LangueEmail, invitePar: string, equipe: string | null, url: string, jours: number) {
+  const t = createTranslator({ locale: langue, messages: MESSAGES[langue], namespace: "Emails.invitation" });
+  const sujet = t("sujet", { site: NOM_SITE });
+  const corps = equipe ? t("corpsRejoindre", { invitePar, equipe, site: NOM_SITE }) : t("corpsNouvelle", { site: NOM_SITE });
+  return { sujet, ...gabarit(t("titre"), corps, t("bouton"), url, t("note", { jours })) };
+}

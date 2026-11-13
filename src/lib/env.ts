@@ -34,6 +34,8 @@ const schema = z.object({
   S3_ACCESS_KEY_ID: z.string().default("cle-acces-dev"),
   S3_SECRET_ACCESS_KEY: z.string().default("cle-secrete-dev"),
 
+  REDIS_URL: z.string().default("redis://localhost:6379"),
+
   MEILISEARCH_URL: z.url().default("http://localhost:7700"),
   MEILISEARCH_CLE: optionnelle,
 });

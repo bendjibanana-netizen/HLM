@@ -8,10 +8,12 @@ import { ImageCouverture } from "@/components/serie/image-couverture";
 import { ListeChapitres } from "@/components/serie/liste-chapitres";
 import { Badge, BadgeClassification } from "@/components/ui/badge";
 import { LienBouton } from "@/components/ui/bouton";
+import { Message } from "@/components/ui/message";
 import { Etoiles } from "@/components/ui/etoiles";
 import { Link } from "@/i18n/navigation";
 import { cleVariante, urlImage } from "@/lib/images/variantes";
 import { obtenirSession } from "@/lib/session";
+import { peutPrevisualiser } from "@/server/acces";
 import { serieParSlug } from "@/server/catalogue";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/serie/[slug]">): Promise<Metadata> {
@@ -34,8 +36,10 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const serie = await serieParSlug(slug);
+  // L'équipe de la série et la modération voient la fiche avant sa publication.
+  const serie = await serieParSlug(slug, await peutPrevisualiser(slug));
   if (!serie) notFound();
+  const enApercu = serie.statutModeration !== "PUBLIEE";
 
   const t = await getTranslations();
   const format = await getFormatter();
@@ -64,6 +68,7 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
 
   const contenu = (
     <article className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-5">
+      {enApercu && <Message>{t("Equipe.apercuBandeau")}</Message>}
       <header className="flex gap-4">
         <div className="w-28 shrink-0 sm:w-44">
           <ImageCouverture

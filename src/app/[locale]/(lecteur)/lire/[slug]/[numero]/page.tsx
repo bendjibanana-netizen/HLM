@@ -8,6 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { db } from "@/lib/db";
 import { srcset, urlImage, varianteProche, type Variante } from "@/lib/images/variantes";
 import { obtenirSession } from "@/lib/session";
+import { peutPrevisualiser } from "@/server/acces";
 import { chapitrePourLecture } from "@/server/catalogue";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/lire/[slug]/[numero]">): Promise<Metadata> {
@@ -22,7 +23,8 @@ export default async function PageLecture({ params }: PageProps<"/[locale]/lire/
   const { locale, slug, numero: numeroDemande } = await params;
   setRequestLocale(locale);
 
-  const donnees = await chapitrePourLecture(slug, numeroDemande);
+  // L'équipe et la modération peuvent lire un chapitre avant sa publication (aperçu).
+  const donnees = await chapitrePourLecture(slug, numeroDemande, await peutPrevisualiser(slug));
   if (!donnees) notFound();
   const { serie, chapitre, precedent, suivant } = donnees;
   const numero = chapitre.numero.toString();

@@ -19,6 +19,15 @@ export const routing = defineRouting({
     "/mot-de-passe-oublie": { fr: "/mot-de-passe-oublie", en: "/forgot-password" },
     "/reinitialiser-mot-de-passe": { fr: "/reinitialiser-mot-de-passe", en: "/reset-password" },
     "/design": "/design",
+    // Espaces de travail : mêmes adresses dans les deux langues.
+    "/invitation/[jeton]": "/invitation/[jeton]",
+    "/equipe": { fr: "/equipe", en: "/team" },
+    "/equipe/series/nouvelle": { fr: "/equipe/series/nouvelle", en: "/team/series/new" },
+    "/equipe/series/[id]": { fr: "/equipe/series/[id]", en: "/team/series/[id]" },
+    "/equipe/series/[id]/chapitres/nouveau": { fr: "/equipe/series/[id]/chapitres/nouveau", en: "/team/series/[id]/chapters/new" },
+    "/admin": "/admin",
+    "/admin/invitations": "/admin/invitations",
+    "/moderation": "/moderation",
   },
 });
 
