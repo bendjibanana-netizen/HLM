@@ -12,12 +12,14 @@ type Point = { jour: string; libelle: string; vues: number };
 export function GraphiqueVues({ points, libelleVues, libelleTableau, colonnes }: { points: Point[]; libelleVues: (n: number) => string; libelleTableau: string; colonnes: [string, string] }) {
   const [actif, setActif] = useState<number | null>(null);
   const max = Math.max(1, ...points.map((p) => p.vues));
-  // Graduations « rondes » : 0, moitié, maximum arrondi au-dessus.
+  // Graduations « rondes » et entières (une vue ne se divise pas) : 0, moitié, maximum arrondi au-dessus.
   const pas = Math.pow(10, Math.floor(Math.log10(max)));
-  const haut = Math.ceil(max / pas) * pas;
-  const [L, H, bas, gauche] = [600, 180, 22, 34];
+  const arrondi = Math.ceil(max / pas) * pas;
+  const haut = arrondi % 2 === 0 ? arrondi : arrondi + 1;
+  // `sommet` laisse la place à l'étiquette de la graduation la plus haute.
+  const [L, H, bas, gauche, sommet] = [600, 190, 22, 34, 10];
   const largeur = (L - gauche) / points.length;
-  const y = (vues: number) => (H - bas) * (1 - vues / haut);
+  const y = (vues: number) => sommet + (H - bas - sommet) * (1 - vues / haut);
 
   return (
     <figure className="flex flex-col gap-2">

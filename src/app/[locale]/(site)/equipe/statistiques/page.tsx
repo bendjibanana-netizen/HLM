@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { GraphiqueVues } from "@/components/revenus/graphique-vues";
 import { Carte } from "@/components/ui/carte";
 import { db } from "@/lib/db";
 import { exigerConnexion } from "@/lib/session";
