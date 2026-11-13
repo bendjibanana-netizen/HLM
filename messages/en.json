@@ -140,7 +140,12 @@
     "retour": "Back to home"
   },
   "Pied": {
-    "droits": "© {annee} {site}"
+    "droits": "© {annee} {site}",
+    "cgu": "Terms of use",
+    "mentions": "Legal notice",
+    "confidentialite": "Privacy",
+    "cookies": "Cookies",
+    "retrait": "Takedown request"
   },
   "Emails": {
     "verification": {
@@ -528,6 +533,50 @@
       "TROP_RAPIDE": "You are posting too fast. Wait a minute.",
       "TROP_DE_LISTES": "You have reached the maximum number of lists.",
       "DEFAUT": "That did not go through. Try again."
+    }
+  },
+  "Cookies": {
+    "titre": "Cookies and privacy",
+    "texte": "We use cookies needed to run the site and, with your agreement, audience measurement and advertising cookies, which fund the platform and pay the teams.",
+    "enSavoirPlus": "Learn more",
+    "refuser": "Reject all",
+    "accepter": "Accept all",
+    "personnaliser": "Customise my choices",
+    "enregistrer": "Save my choices",
+    "necessaires": "Necessary",
+    "necessairesAide": "Login, language and remembering this choice. Always on.",
+    "mesure": "Audience measurement",
+    "mesureAide": "Traffic statistics to improve the site.",
+    "publicite": "Advertising",
+    "publiciteAide": "Displays the ads that fund the platform and the teams."
+  },
+  "Retrait": {
+    "titre": "Takedown request",
+    "intro": "Are you the author or rights holder of a work published here without your consent? Fill in this form: every request is reviewed promptly and you get an answer by email.",
+    "identite": "Your identity",
+    "nom": "Full name",
+    "qualite": "You are acting as",
+    "ayantDroit": "Author or rights holder",
+    "representant": "Authorised representative of the rights holder",
+    "organisation": "Company or organisation (optional)",
+    "email": "Email address",
+    "telephone": "Phone (optional)",
+    "adresse": "Postal address (optional)",
+    "oeuvreSection": "The work concerned",
+    "oeuvre": "Title of the work",
+    "droits": "Your rights to this work",
+    "droitsAide": "Describe how you hold the rights: author, publisher, licence agreement, registration… (at least 20 characters)",
+    "urls": "Addresses of the pages concerned",
+    "urlsAide": "One address per line, 30 at most.",
+    "declaration": "I declare on my honour that the information provided is accurate and that I am the rights holder or authorised to act on their behalf.",
+    "signature": "Signature (full name)",
+    "envoyer": "Send the request",
+    "envoyee": "Request recorded",
+    "envoyeeTexte": "Your request has the reference {reference}. An acknowledgement has just been emailed to you.",
+    "erreurs": {
+      "DONNEES_INVALIDES": "Some fields are missing or invalid. Check the page addresses in particular (they must start with https://).",
+      "TROP_DE_DEMANDES": "Too many requests in a short time. Try again in an hour.",
+      "DEFAUT": "The request could not be recorded. Try again."
     }
   }
 }

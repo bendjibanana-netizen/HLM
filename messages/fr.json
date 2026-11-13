@@ -140,7 +140,12 @@
     "retour": "Retour à l'accueil"
   },
   "Pied": {
-    "droits": "© {annee} {site}"
+    "droits": "© {annee} {site}",
+    "cgu": "Conditions d'utilisation",
+    "mentions": "Mentions légales",
+    "confidentialite": "Confidentialité",
+    "cookies": "Cookies",
+    "retrait": "Demande de retrait"
   },
   "Emails": {
     "verification": {
@@ -567,6 +572,50 @@
       "TROP_RAPIDE": "Vous publiez trop vite. Patientez une minute.",
       "TROP_DE_LISTES": "Vous avez atteint le nombre maximal de listes.",
       "DEFAUT": "L'action n'a pas abouti. Réessayez."
+    }
+  },
+  "Cookies": {
+    "titre": "Cookies et vie privée",
+    "texte": "Nous utilisons des cookies nécessaires au fonctionnement du site et, avec votre accord, des cookies de mesure d'audience et de publicité, qui financent la plateforme et la rémunération des équipes.",
+    "enSavoirPlus": "En savoir plus",
+    "refuser": "Tout refuser",
+    "accepter": "Tout accepter",
+    "personnaliser": "Personnaliser mes choix",
+    "enregistrer": "Enregistrer mes choix",
+    "necessaires": "Nécessaires",
+    "necessairesAide": "Connexion, langue et mémorisation de ce choix. Toujours actifs.",
+    "mesure": "Mesure d'audience",
+    "mesureAide": "Statistiques de fréquentation pour améliorer le site.",
+    "publicite": "Publicité",
+    "publiciteAide": "Affichage des publicités qui financent la plateforme et les équipes."
+  },
+  "Retrait": {
+    "titre": "Demande de retrait",
+    "intro": "Vous êtes l'auteur ou l'ayant droit d'une œuvre publiée ici sans votre accord ? Remplissez ce formulaire : chaque demande est examinée rapidement et vous recevez une réponse par email.",
+    "identite": "Votre identité",
+    "nom": "Nom et prénom",
+    "qualite": "Vous agissez en tant que",
+    "ayantDroit": "Auteur ou titulaire des droits",
+    "representant": "Représentant autorisé de l'ayant droit",
+    "organisation": "Société ou organisation (facultatif)",
+    "email": "Adresse email",
+    "telephone": "Téléphone (facultatif)",
+    "adresse": "Adresse postale (facultatif)",
+    "oeuvreSection": "L'œuvre concernée",
+    "oeuvre": "Titre de l'œuvre",
+    "droits": "Vos droits sur cette œuvre",
+    "droitsAide": "Décrivez en quoi vous détenez les droits : auteur, éditeur, contrat de licence, enregistrement… (20 caractères au moins)",
+    "urls": "Adresses des pages concernées",
+    "urlsAide": "Une adresse par ligne, 30 au plus.",
+    "declaration": "J'atteste sur l'honneur que les informations fournies sont exactes et que je suis l'ayant droit ou autorisé à agir en son nom.",
+    "signature": "Signature (nom complet)",
+    "envoyer": "Envoyer la demande",
+    "envoyee": "Demande enregistrée",
+    "envoyeeTexte": "Votre demande porte la référence {reference}. Un accusé de réception vient de vous être envoyé par email.",
+    "erreurs": {
+      "DONNEES_INVALIDES": "Certains champs sont manquants ou invalides. Vérifiez notamment les adresses des pages (elles doivent commencer par https://).",
+      "TROP_DE_DEMANDES": "Trop de demandes en peu de temps. Réessayez dans une heure.",
+      "DEFAUT": "La demande n'a pas pu être enregistrée. Réessayez."
     }
   }
 }

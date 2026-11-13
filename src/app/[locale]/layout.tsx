@@ -3,6 +3,7 @@ import { Bricolage_Grotesque } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { BandeauCookies } from "@/components/legal/bandeau-cookies";
 import { routing } from "@/i18n/routing";
 import { NOM_SITE } from "@/lib/site";
 import "../globals.css";
@@ -58,7 +59,10 @@ export default async function MiseEnPageRacine({ children, params }: LayoutProps
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
       </head>
       <body className="flex min-h-dvh flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          <BandeauCookies />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

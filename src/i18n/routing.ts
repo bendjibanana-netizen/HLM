@@ -21,6 +21,10 @@ export const routing = defineRouting({
     "/mot-de-passe-oublie": { fr: "/mot-de-passe-oublie", en: "/forgot-password" },
     "/reinitialiser-mot-de-passe": { fr: "/reinitialiser-mot-de-passe", en: "/reset-password" },
     "/design": "/design",
+    "/cgu": { fr: "/cgu", en: "/terms" },
+    "/mentions-legales": { fr: "/mentions-legales", en: "/legal-notice" },
+    "/confidentialite": { fr: "/confidentialite", en: "/privacy" },
+    "/retrait": { fr: "/retrait", en: "/takedown" },
     // Espaces de travail : mêmes adresses dans les deux langues.
     "/invitation/[jeton]": "/invitation/[jeton]",
     "/equipe": { fr: "/equipe", en: "/team" },

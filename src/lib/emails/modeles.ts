@@ -64,3 +64,34 @@ export function emailInvitation(langue: LangueEmail, invitePar: string, equipe: 
   const corps = equipe ? t("corpsRejoindre", { invitePar, equipe, site: NOM_SITE }) : t("corpsNouvelle", { site: NOM_SITE });
   return { sujet, ...gabarit(t("titre"), corps, t("bouton"), url, t("note", { jours })) };
 }
+
+/**
+ * Emails adressés à l'auteur d'une demande de retrait. Rédigés en français et en anglais dans le même message :
+ * la langue du demandeur n'est pas connue.
+ */
+export function emailRetrait(etape: "recue" | "acceptee" | "refusee", reference: string, oeuvre: string, reponse?: string) {
+  const textes: Record<typeof etape, { titre: string; message: string }> = {
+    recue: {
+      titre: "Demande de retrait reçue",
+      message: `Nous avons bien reçu votre demande concernant « ${oeuvre} ». Elle sera examinée dans les meilleurs délais. / We have received your takedown request about “${oeuvre}”. It will be reviewed promptly.`,
+    },
+    acceptee: {
+      titre: "Demande de retrait acceptée",
+      message: `Votre demande concernant « ${oeuvre} » a été acceptée : le contenu a été retiré. / Your request about “${oeuvre}” was accepted: the content has been removed.`,
+    },
+    refusee: {
+      titre: "Demande de retrait refusée",
+      message: `Votre demande concernant « ${oeuvre} » n'a pas été retenue. / Your request about “${oeuvre}” was not upheld.`,
+    },
+  };
+  const { titre, message } = textes[etape];
+  const corps = reponse ? `${message}\n\n${reponse}` : message;
+  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f6f2ea;font-family:system-ui,sans-serif;color:#17161a;">
+    <div style="max-width:520px;margin:0 auto;background:#fffdf8;border:1px solid #ddd5c5;border-radius:16px;padding:28px;">
+      <p style="margin:0 0 16px;font-size:14px;font-weight:700;">${echapper(NOM_SITE)}</p>
+      <h1 style="margin:0 0 12px;font-size:20px;">${echapper(titre)}</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.5;white-space:pre-line;">${echapper(corps)}</p>
+      <p style="margin:0;font-size:13px;color:#5f5b66;">Référence / Reference : ${echapper(reference)}</p>
+    </div></body></html>`;
+  return { sujet: `${titre} — ${reference}`, texte: `${titre}\n\n${corps}\n\nRéférence : ${reference}`, html };
+}

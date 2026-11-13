@@ -17,6 +17,7 @@ export default async function PageInscription({ params, searchParams }: PageProp
   const { locale } = await params;
   const requete = await searchParams;
   const t = await getTranslations("Auth.inscription");
+  const tPied = await getTranslations("Pied");
 
   const suiteDemandee = Array.isArray(requete.suite) ? requete.suite[0] : requete.suite;
   const suite = destinationSure(suiteDemandee, getPathname({ href: "/", locale }));
@@ -33,6 +34,15 @@ export default async function PageInscription({ params, searchParams }: PageProp
       </div>
       <BoutonsSociaux fournisseurs={fournisseurs} suite={suite} />
       <FormulaireInscription suite={suite} cheminCompte={getPathname({ href: "/compte", locale })} />
+      <p className="text-center text-xs text-texte-doux">
+        <Link href="/cgu" className="underline hover:text-texte">
+          {tPied("cgu")}
+        </Link>
+        {" · "}
+        <Link href="/confidentialite" className="underline hover:text-texte">
+          {tPied("confidentialite")}
+        </Link>
+      </p>
       <p className="text-center text-sm text-texte-doux">
         {t("dejaInscrit")}{" "}
         <Link
