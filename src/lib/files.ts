@@ -50,3 +50,12 @@ export async function demanderTraitementChapitre(chapitreId: string): Promise<vo
   // jobId : deux demandes pour le même chapitre ne lancent pas deux traitements en parallèle.
   await file(FILE_CHAPITRES).add("traiter", tache, { jobId: `traiter-${chapitreId}-${Date.now()}` });
 }
+
+export type TacheSync = { type: "executer"; sourceId: string; declencheeParId?: string } | { type: "planifier" };
+
+/** Demande au worker un passage immédiat sur une source (relance manuelle ou planification). */
+export async function demanderSynchronisation(sourceId: string, declencheeParId?: string): Promise<void> {
+  const tache: TacheSync = { type: "executer", sourceId, declencheeParId };
+  // Un seul essai : un échec est déjà consigné dans l'historique, et la source repassera à l'heure prévue.
+  await file(FILE_SYNC).add("executer", tache, { attempts: 1 });
+}

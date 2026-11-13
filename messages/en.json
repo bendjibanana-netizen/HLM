@@ -578,5 +578,48 @@
       "TROP_DE_DEMANDES": "Too many requests in a short time. Try again in an hour.",
       "DEFAUT": "The request could not be recorded. Try again."
     }
+  },
+  "Sync": {
+    "titre": "Automatic sync",
+    "intro": "Connect a source you control (RSS feed, Google Drive folder, Discord channel, or a site whose rights holder has agreed): the bot will publish your new chapters under the team name. Every source is approved by the administration before it is activated.",
+    "aucune": "No source connected.",
+    "ajouter": "Propose a source",
+    "type": "Source type",
+    "types": {
+      "RSS": "RSS feed",
+      "GOOGLE_DRIVE": "Google Drive folder",
+      "DISCORD": "Discord channel",
+      "SITE_AUTORISE": "Authorised site"
+    },
+    "nom": "Source name",
+    "url": "Address (feed, shared folder or series page)",
+    "selecteurChapitres": "CSS selector for chapter links (authorised site)",
+    "selecteurImages": "CSS selector for images (authorised site)",
+    "salonId": "Channel ID (Discord)",
+    "jeton": "Bot token (Discord)",
+    "jetonAide": "Stored encrypted, never shown again.",
+    "autorisation": "Where does your right to reuse this content come from?",
+    "autorisationAide": "E.g. “our own site”, “written agreement from the publisher dated …”. Read by the administration.",
+    "envoyer": "Propose the source",
+    "proposee": "Source proposed. It will be activated once approved by the administration.",
+    "retirer": "Remove",
+    "etats": {
+      "ATTENTE": "Awaiting approval",
+      "ACTIVE": "Active",
+      "PAUSE": "Paused",
+      "ERREUR": "Failing"
+    },
+    "dernierPassage": "Last run: {date}",
+    "jamais": "No run yet",
+    "erreurs": {
+      "URL_REQUISE": "Enter the source address.",
+      "SELECTEURS_REQUIS": "Enter both CSS selectors.",
+      "DISCORD_INCOMPLET": "Enter the channel ID and the bot token.",
+      "TROP_DE_SOURCES": "Three sources at most per series.",
+      "DONNEES_INVALIDES": "Some fields are missing or invalid (the permission explanation needs at least 10 characters).",
+      "INTERDIT": "Action not allowed.",
+      "NON_VALIDEE": "Approve the source first.",
+      "DEFAUT": "That did not go through."
+    }
   }
 }

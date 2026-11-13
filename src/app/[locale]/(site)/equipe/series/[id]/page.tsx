@@ -6,6 +6,7 @@ import { Actualisation } from "@/components/equipe/actualisation";
 import { BoutonAction } from "@/components/equipe/bouton-action";
 import { EnvoiFichier } from "@/components/equipe/envoi-fichier";
 import { FormulaireSerie } from "@/components/equipe/formulaire-serie";
+import { SourcesSerie } from "@/components/equipe/sources-serie";
 import { ImageCouverture } from "@/components/serie/image-couverture";
 import { Badge } from "@/components/ui/badge";
 import { LienBouton } from "@/components/ui/bouton";
@@ -118,6 +119,8 @@ export default async function PageGestionSerie({ params }: PageProps<"/[locale]/
           </ul>
         )}
       </section>
+
+      {serie.statutModeration === "PUBLIEE" && <SourcesSerie serieId={id} modifiable={modifiable} />}
 
       {modifiable && (
         <section className="flex flex-col gap-4 border-t border-bordure pt-6">

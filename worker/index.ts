@@ -3,7 +3,8 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
 import { db } from "@/lib/db";
-import { connexionRedis, file, FILE_CHAPITRES, type TacheChapitre } from "@/lib/files";
+import { connexionRedis, demanderSynchronisation, file, FILE_CHAPITRES, FILE_SYNC, type TacheChapitre, type TacheSync } from "@/lib/files";
+import { executerSource, sourcesDues } from "@/server/sync";
 import { publierChapitresProgrammes } from "@/server/publication";
 import { traiterChapitre } from "./chapitres";
 
@@ -32,12 +33,29 @@ chapitres.on("failed", async (tache, erreur) => {
   }
 });
 
+// Synchronisation : un passage à la fois, pour rester discret envers les sites sources.
+const synchronisation = new Worker<TacheSync>(
+  FILE_SYNC,
+  async (tache) => {
+    if (tache.data.type === "executer") return executerSource(tache.data.sourceId, tache.data.declencheeParId);
+    const dues = await sourcesDues();
+    for (const sourceId of dues) await demanderSynchronisation(sourceId);
+    return { planifiees: dues.length };
+  },
+  { connection, concurrency: 1 },
+);
+synchronisation.on("completed", (tache, resultat) => {
+  if (tache.name === "executer") console.log("[synchronisation] passage terminé :", JSON.stringify(resultat));
+});
+synchronisation.on("failed", (tache, erreur) => console.error(`[synchronisation] ${tache?.name} en échec :`, erreur.message));
+
 /** Tâches répétées : enregistrées une fois, BullMQ évite les doublons entre plusieurs workers. */
 async function planifier() {
   await file(FILE_CHAPITRES).upsertJobScheduler("publier-programmes", { every: 60_000 }, { name: "publier-programmes", data: { type: "publier-programmes" } });
+  await file(FILE_SYNC).upsertJobScheduler("planifier-sources", { every: 5 * 60_000 }, { name: "planifier", data: { type: "planifier" } });
 }
 
-const workers: Worker[] = [chapitres];
+const workers: Worker[] = [chapitres, synchronisation];
 
 async function arreter() {
   console.log("[worker] arrêt en cours…");

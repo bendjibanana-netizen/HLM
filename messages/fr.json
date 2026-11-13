@@ -480,6 +480,32 @@
       "retraitsJustifies": "{nombre, plural, one {# retrait justifié} other {# retraits justifiés}}",
       "lever": "Lever la suspension",
       "seuil": "Seuil de suspension : {nombre} retraits justifiés."
+    },
+    "bot": {
+      "intro": "Le robot ne lit que des sources validées, rattachées à une équipe qui détient les droits. Il respecte robots.txt, s'identifie et ne contourne aucune protection.",
+      "sources": "Sources",
+      "aucune": "Aucune source.",
+      "equipe": "Équipe",
+      "serie": "Série",
+      "autorisation": "Autorisation déclarée",
+      "valider": "Valider et activer",
+      "activer": "Réactiver",
+      "pause": "Mettre en pause",
+      "supprimer": "Supprimer",
+      "relancer": "Relancer maintenant",
+      "relancee": "Passage demandé. Le résultat apparaîtra dans l'historique.",
+      "confirmer": "Supprimer cette source et son historique ?",
+      "historique": "Historique des passages",
+      "aucunPassage": "Aucun passage enregistré.",
+      "detectes": "{nombre} détectés",
+      "importes": "{nombre} importés",
+      "manuel": "relance manuelle",
+      "erreursSuite": "{nombre, plural, one {# échec d'affilée} other {# échecs d'affilée}}",
+      "statuts": {
+        "EN_COURS": "En cours",
+        "REUSSIE": "Réussi",
+        "ECHOUEE": "Échec"
+      }
     }
   },
   "Moderation": {
@@ -672,6 +698,49 @@
       "DONNEES_INVALIDES": "Certains champs sont manquants ou invalides. Vérifiez notamment les adresses des pages (elles doivent commencer par https://).",
       "TROP_DE_DEMANDES": "Trop de demandes en peu de temps. Réessayez dans une heure.",
       "DEFAUT": "La demande n'a pas pu être enregistrée. Réessayez."
+    }
+  },
+  "Sync": {
+    "titre": "Synchronisation automatique",
+    "intro": "Connectez une source que vous contrôlez (flux RSS, dossier Google Drive, salon Discord, ou site dont l'ayant droit a donné son accord) : le robot publiera vos nouveaux chapitres sous le nom de l'équipe. Chaque source est validée par l'administration avant d'être activée.",
+    "aucune": "Aucune source connectée.",
+    "ajouter": "Proposer une source",
+    "type": "Type de source",
+    "types": {
+      "RSS": "Flux RSS",
+      "GOOGLE_DRIVE": "Dossier Google Drive",
+      "DISCORD": "Salon Discord",
+      "SITE_AUTORISE": "Site autorisé"
+    },
+    "nom": "Nom de la source",
+    "url": "Adresse (flux, dossier partagé ou page de la série)",
+    "selecteurChapitres": "Sélecteur CSS des liens de chapitres (site autorisé)",
+    "selecteurImages": "Sélecteur CSS des images (site autorisé)",
+    "salonId": "Identifiant du salon (Discord)",
+    "jeton": "Jeton du bot (Discord)",
+    "jetonAide": "Stocké chiffré, jamais réaffiché.",
+    "autorisation": "D'où vient votre droit de reprendre ces contenus ?",
+    "autorisationAide": "Ex. « notre propre site », « accord écrit de l'éditeur du … ». Lu par l'administration.",
+    "envoyer": "Proposer la source",
+    "proposee": "Source proposée. Elle sera activée après validation par l'administration.",
+    "retirer": "Retirer",
+    "etats": {
+      "ATTENTE": "En attente de validation",
+      "ACTIVE": "Active",
+      "PAUSE": "En pause",
+      "ERREUR": "En erreur"
+    },
+    "dernierPassage": "Dernier passage : {date}",
+    "jamais": "Aucun passage pour le moment",
+    "erreurs": {
+      "URL_REQUISE": "Indiquez l'adresse de la source.",
+      "SELECTEURS_REQUIS": "Indiquez les deux sélecteurs CSS.",
+      "DISCORD_INCOMPLET": "Indiquez l'identifiant du salon et le jeton du bot.",
+      "TROP_DE_SOURCES": "Trois sources au plus par série.",
+      "DONNEES_INVALIDES": "Certains champs sont manquants ou invalides (l'explication sur l'autorisation fait au moins 10 caractères).",
+      "INTERDIT": "Action non autorisée.",
+      "NON_VALIDEE": "Validez d'abord la source.",
+      "DEFAUT": "L'action n'a pas abouti."
     }
   }
 }

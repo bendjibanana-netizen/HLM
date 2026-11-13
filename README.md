@@ -3,7 +3,7 @@
 Plateforme web de lecture de BD numériques, publiées par des équipes et des auteurs invités,
 avec une dimension communautaire (notes, critiques, listes). Mobile d'abord.
 
-**État : phases 1 à 4 terminées** (socle, catalogue, recherche, lecteur, espace équipe, communauté).
+**État : phases 1 à 5 terminées** (socle, catalogue, recherche, lecteur, espace équipe, communauté, modération, pages légales, robots de synchronisation).
 
 ## Démarrer en local
 
@@ -99,6 +99,17 @@ servis directement par le stockage (un CDN en production), avec un cache d'un an
 
 Les données de démonstration sont entièrement inventées et leurs images sont dessinées par code
 (`prisma/demo/`).
+
+## Robots de synchronisation
+
+Le robot importe les nouveaux chapitres depuis des sources rattachées à une équipe qui en détient les droits :
+flux RSS, dossier Google Drive partagé, salon Discord de l'équipe, ou site dont l'ayant droit a donné son accord.
+Chaque source est validée par l'admin avant d'être activée (`/admin/bots`).
+
+Le robot s'identifie, respecte `robots.txt`, attend entre deux requêtes, ne contacte aucune adresse interne
+et s'arrête dès qu'un site refuse l'accès : il ne contourne aucune protection.
+
+Pour tester avec un serveur local, lancer le worker avec `SYNC_AUTORISER_LOCAL=1` (ignoré en production).
 
 ## Conventions
 
