@@ -156,3 +156,11 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Rangée à défilement horizontal sans barre visible (carrousels de l'accueil) */
+@utility sans-barre {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

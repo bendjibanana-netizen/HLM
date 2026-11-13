@@ -1,5 +1,5 @@
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getPathname, Link } from "@/i18n/navigation";
 import { NOM_SITE } from "@/lib/site";
 import { BarreRecherche } from "./barre-recherche";
 import { BoutonCompte } from "./bouton-compte";
@@ -9,6 +9,7 @@ import { Logo } from "./logo";
 /** En-tête collant : emblème, recherche toujours visible et accès au compte. */
 export async function EnTete() {
   const t = await getTranslations("Navigation");
+  const locale = await getLocale();
 
   return (
     <header className="sticky top-0 z-40 border-b border-bordure bg-fond/95 backdrop-blur">
@@ -19,7 +20,7 @@ export async function EnTete() {
           <Logo className="hidden md:inline-flex" />
         </Link>
         <LiensEntete />
-        <BarreRecherche className="md:ml-auto md:max-w-xs" />
+        <BarreRecherche action={getPathname({ href: "/catalogue", locale })} className="md:ml-auto md:max-w-xs" />
         <BoutonCompte />
       </nav>
     </header>
