@@ -1,0 +1,168 @@
+{
+  "Meta": {
+    "titre": "{site} — Webtoons, manga and manhwa online",
+    "description": "Read webtoons, manga and manhwa published by their authors and teams. Rate, review and share your lists."
+  },
+  "Navigation": {
+    "principale": "Main navigation",
+    "allerAuContenu": "Skip to content",
+    "accueil": "Home",
+    "catalogue": "Browse",
+    "bibliotheque": "Library",
+    "compte": "Account",
+    "connexion": "Log in",
+    "inscription": "Sign up",
+    "monCompte": "My account",
+    "rechercher": "Search",
+    "recherchePlaceholder": "Series, author, team…"
+  },
+  "Theme": {
+    "libelle": "Theme",
+    "systeme": "System",
+    "clair": "Light",
+    "sombre": "Dark"
+  },
+  "Langue": {
+    "libelle": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "Classification": {
+    "TOUT_PUBLIC": "All ages",
+    "DOUZE_PLUS": "12+",
+    "SEIZE_PLUS": "16+"
+  },
+  "Accueil": {
+    "surtitre": "Webtoons · Manga · Manhwa",
+    "titre": "Read. Rate. Share your lists.",
+    "accroche": "Series published by their authors and teams, built to be read one-handed on your phone.",
+    "creerCompte": "Sign up",
+    "parcourir": "Browse the catalogue",
+    "atouts": {
+      "titre": "What you will be able to do here",
+      "lire": {
+        "titre": "Read without friction",
+        "texte": "Vertical scrolling for webtoons, page by page for manga. Your position is remembered."
+      },
+      "suivre": {
+        "titre": "Follow your series",
+        "texte": "A notification for every new chapter: on the site, on your phone or by email."
+      },
+      "partager": {
+        "titre": "Keep your diary",
+        "texte": "Half-star ratings, reviews, public or private lists and a reading diary."
+      }
+    }
+  },
+  "Chantier": {
+    "titre": "This page is coming soon",
+    "catalogue": "The catalogue and search are planned for phase 2.",
+    "rechercheEnAttente": "Your search for “{requete}” will work as soon as the catalogue is in place.",
+    "bibliotheque": "Your followed series, lists and reading diary arrive with phase 4.",
+    "retourAccueil": "Back to home"
+  },
+  "Auth": {
+    "retourAccueil": "Back to home",
+    "email": "Email address",
+    "motDePasse": "Password",
+    "afficherMotDePasse": "Show password",
+    "masquerMotDePasse": "Hide password",
+    "pseudo": "Username",
+    "ou": "or",
+    "continuerAvec": "Continue with {fournisseur}",
+    "connexion": {
+      "titre": "Log in",
+      "sousTitre": "Get back to your followed series and lists.",
+      "bouton": "Log in",
+      "motDePasseOublie": "Forgot your password?",
+      "pasDeCompte": "No account yet?",
+      "creerCompte": "Sign up",
+      "motDePasseModifie": "Your password has been changed. You can now log in."
+    },
+    "inscription": {
+      "titre": "Sign up",
+      "sousTitre": "Free. Follow series, rate them and build your lists.",
+      "bouton": "Create my account",
+      "aidePseudo": "{min} to {max} characters: letters, digits and underscore. It appears in your profile address.",
+      "aideMotDePasse": "At least {min} characters.",
+      "dejaInscrit": "Already have an account?",
+      "seConnecter": "Log in"
+    },
+    "oubli": {
+      "titre": "Forgot password",
+      "sousTitre": "Enter your email address and we will send you a link to choose a new password.",
+      "bouton": "Send the link",
+      "envoye": "If an account exists for {email}, an email is on its way. The link is valid for one hour.",
+      "retourConnexion": "Back to log in"
+    },
+    "reinitialisation": {
+      "titre": "New password",
+      "sousTitre": "Choose a new password. You will be logged out of your other devices.",
+      "nouveauMotDePasse": "New password",
+      "bouton": "Save password",
+      "lienInvalide": "This link is no longer valid. Request a new one.",
+      "redemander": "Request a new link"
+    },
+    "erreurs": {
+      "INVALID_EMAIL_OR_PASSWORD": "Incorrect email address or password.",
+      "USER_ALREADY_EXISTS": "An account already exists with this email address. Log in or reset your password.",
+      "INVALID_EMAIL": "This email address is not valid.",
+      "PASSWORD_TOO_SHORT": "The password must be at least {min} characters long.",
+      "PASSWORD_TOO_LONG": "This password is too long.",
+      "INVALID_TOKEN": "This link is no longer valid. Request a new one.",
+      "PSEUDO_DEJA_PRIS": "This username is already taken. Try another one.",
+      "PSEUDO_INVALIDE": "This username is not valid.",
+      "TROP_DE_TENTATIVES": "Too many attempts. Wait a minute before trying again.",
+      "INCONNUE": "That did not go through. Check your connection and try again."
+    },
+    "pseudoErreurs": {
+      "TROP_COURT": "The username must be at least {min} characters long.",
+      "TROP_LONG": "The username cannot exceed {max} characters.",
+      "CARACTERES_INVALIDES": "Use only unaccented letters, digits and underscore.",
+      "RESERVE": "This username is reserved. Choose another one."
+    }
+  },
+  "Compte": {
+    "titre": "My account",
+    "profil": "Profile",
+    "email": "Email address",
+    "emailVerifie": "Verified",
+    "emailNonVerifie": "Not verified",
+    "verificationTexte": "Confirm your address to be able to comment and publish reviews.",
+    "renvoyerVerification": "Resend the verification email",
+    "verificationEnvoyee": "Email sent. Remember to check your spam folder.",
+    "role": "Role",
+    "roles": {
+      "LECTEUR": "Reader",
+      "MODERATEUR": "Moderator",
+      "ADMIN": "Administrator"
+    },
+    "membreDepuis": "Member since {date}",
+    "preferences": "Preferences",
+    "deconnexion": "Log out"
+  },
+  "Introuvable": {
+    "titre": "Page not found",
+    "texte": "This page does not exist or has been moved.",
+    "retour": "Back to home"
+  },
+  "Pied": {
+    "droits": "© {annee} {site}"
+  },
+  "Emails": {
+    "verification": {
+      "sujet": "Confirm your email address — {site}",
+      "titre": "Welcome, {nom}",
+      "corps": "Confirm your email address to finish setting up your {site} account.",
+      "bouton": "Confirm my address",
+      "note": "If you did not create an account, ignore this email."
+    },
+    "reinitialisation": {
+      "sujet": "Reset your password — {site}",
+      "titre": "Hello {nom}",
+      "corps": "You asked to change your password. This link is valid for one hour.",
+      "bouton": "Choose a new password",
+      "note": "If you did not request this, ignore this email: your password stays unchanged."
+    }
+  }
+}

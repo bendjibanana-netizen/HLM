@@ -1,0 +1,22 @@
+# Dépendances
+node_modules
+
+# Next.js
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+
+# Client Prisma généré
+src/generated
+
+# Variables d'environnement (ne jamais versionner les secrets)
+.env
+.env.local
+.env.*.local
+
+# Divers
+.DS_Store
+coverage
+test-results
+playwright-report

@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+   Thème « encre et papier »
+   Les couleurs sont des variables CSS : changer de thème revient à changer
+   leurs valeurs, sans toucher aux composants.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Thème clair (papier) — valeurs par défaut */
+:root {
+  color-scheme: light;
+  --fond: #f6f2ea;
+  --surface: #fffdf8;
+  --surface-2: #ece6da;
+  --bordure: #d9d1c1;
+  --texte: #17161a;
+  --texte-doux: #5d5964;
+  --accent: #bd2e16;
+  --sur-accent: #ffffff;
+  --succes: #176c37;
+  --alerte: #8f5a00;
+  --danger: #b3261e;
+  --trame: rgb(23 22 26 / 0.09);
+}
+
+/* Thème sombre (encre) — appliqué si le système est en sombre et que le lecteur n'a pas forcé le clair */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) {
+    color-scheme: dark;
+    --fond: #0e0e12;
+    --surface: #17171d;
+    --surface-2: #22222a;
+    --bordure: #30303b;
+    --texte: #f4f0e8;
+    --texte-doux: #a9a6b2;
+    --accent: #ff5c3d;
+    --sur-accent: #160a06;
+    --succes: #5dd68a;
+    --alerte: #f5b942;
+    --danger: #ff7a70;
+    --trame: rgb(244 240 232 / 0.08);
+  }
+}
+
+/* Thème sombre choisi explicitement par le lecteur */
+:root[data-theme="sombre"] {
+  color-scheme: dark;
+  --fond: #0e0e12;
+  --surface: #17171d;
+  --surface-2: #22222a;
+  --bordure: #30303b;
+  --texte: #f4f0e8;
+  --texte-doux: #a9a6b2;
+  --accent: #ff5c3d;
+  --sur-accent: #160a06;
+  --succes: #5dd68a;
+  --alerte: #f5b942;
+  --danger: #ff7a70;
+  --trame: rgb(244 240 232 / 0.08);
+}
+
+/* Expose les variables à Tailwind : bg-fond, text-texte-doux, border-bordure, etc. */
+@theme inline {
+  --color-fond: var(--fond);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-bordure: var(--bordure);
+  --color-texte: var(--texte);
+  --color-texte-doux: var(--texte-doux);
+  --color-accent: var(--accent);
+  --color-sur-accent: var(--sur-accent);
+  --color-succes: var(--succes);
+  --color-alerte: var(--alerte);
+  --color-danger: var(--danger);
+
+  --font-titre: var(--police-titre), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  /* Hauteur de la barre de navigation basse (mobile), hors zone de sécurité de l'écran */
+  --spacing-nav: 3.75rem;
+  /* Hauteur de l'en-tête collant */
+  --spacing-entete: 3.5rem;
+}
+
+@layer base {
+  html {
+    /* Empêche le zoom automatique du texte en mode paysage sur iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Les ancres ne passent pas sous l'en-tête collant */
+    scroll-padding-top: calc(var(--spacing-entete) + 0.75rem);
+  }
+
+  body {
+    background-color: var(--fond);
+    color: var(--texte);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* Supprime le flash gris au toucher sur mobile : les états actifs sont gérés par les composants */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-titre);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Anneau de focus unique, visible uniquement à la navigation au clavier */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Les champs gardent une taille de texte ≥ 16px : en dessous, iOS zoome à la saisie */
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+@layer components {
+  /* Trame de points façon planche de manga : motif décoratif des zones d'accroche */
+  .trame {
+    background-image: radial-gradient(var(--trame) 1.5px, transparent 1.6px);
+    background-size: 10px 10px;
+  }
+
+  /* La trame s'estompe vers le bas pour ne pas gêner la lecture du texte */
+  .trame-fondue {
+    mask-image: linear-gradient(to bottom, black, transparent);
+  }
+}
+
+/* Marge basse qui respecte la barre système des téléphones */
+@utility pb-securite {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Espace réservé en bas de page pour la navigation basse (mobile uniquement) */
+@utility pb-nav-securite {
+  padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+}
+
+/* Respecte le réglage « réduire les animations » du système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

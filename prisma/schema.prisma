@@ -1,0 +1,1122 @@
+// Schéma de la base de données de la plateforme.
+//
+// Conventions :
+//  - Les modèles d'authentification (User, Session, Account, Verification) gardent
+//    les noms attendus par Better Auth ; tout le reste est nommé en français.
+//  - Les montants sont stockés en centimes (entiers), jamais en flottants.
+//  - Les compteurs « nb… » et « noteMoyenne » sont dénormalisés : ils sont recalculés
+//    par l'application pour éviter des agrégats coûteux à chaque affichage.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ════════════════════════════════════════════════════════════════
+// Énumérations
+// ════════════════════════════════════════════════════════════════
+
+/// Rôle global d'un compte. L'accès « équipe » ne passe pas par ce rôle
+/// mais par l'appartenance à une équipe (MembreEquipe).
+enum Role {
+  LECTEUR
+  MODERATEUR
+  ADMIN
+}
+
+enum RoleEquipe {
+  CHEF
+  MEMBRE
+}
+
+enum StatutEquipe {
+  ACTIVE
+  SUSPENDUE
+}
+
+enum TypeInvitation {
+  /// L'invité crée une nouvelle équipe et en devient le chef.
+  NOUVELLE_EQUIPE
+  /// L'invité rejoint une équipe existante.
+  REJOINDRE_EQUIPE
+}
+
+enum StatutJuridique {
+  PARTICULIER
+  AUTO_ENTREPRENEUR
+  SOCIETE
+  ASSOCIATION
+  AUTRE
+}
+
+enum TypeSerie {
+  WEBTOON
+  MANGA
+  MANHWA
+  MANHUA
+}
+
+enum Langue {
+  FR
+  EN
+}
+
+enum StatutSerie {
+  EN_COURS
+  TERMINE
+  EN_PAUSE
+  ABANDONNE
+}
+
+/// Aucun contenu adulte : la classification s'arrête à 16+.
+enum ClassificationAge {
+  TOUT_PUBLIC
+  DOUZE_PLUS
+  SEIZE_PLUS
+}
+
+enum SensLecture {
+  /// Défilement vertical continu (webtoon).
+  VERTICAL
+  /// Page par page, de droite à gauche (manga).
+  DROITE_A_GAUCHE
+  /// Page par page, de gauche à droite.
+  GAUCHE_A_DROITE
+}
+
+/// Cycle de vie d'une série côté modération.
+enum StatutModeration {
+  BROUILLON
+  EN_ATTENTE
+  PUBLIEE
+  REFUSEE
+  RETIREE
+}
+
+enum StatutChapitre {
+  BROUILLON
+  /// Images en cours de conversion/découpage par le worker.
+  EN_TRAITEMENT
+  /// Publication programmée (voir Chapitre.programmePour).
+  PROGRAMME
+  PUBLIE
+  RETIRE
+}
+
+enum OrigineChapitre {
+  MANUEL
+  SYNCHRONISATION
+}
+
+enum RoleAuteur {
+  SCENARIO
+  DESSIN
+  SCENARIO_ET_DESSIN
+  OEUVRE_ORIGINALE
+}
+
+enum TypeListe {
+  A_LIRE
+  EN_COURS
+  TERMINE
+  ABANDONNE
+  /// Liste personnalisée créée par le lecteur.
+  LIBRE
+}
+
+enum TypeActivite {
+  NOTE
+  CRITIQUE
+  AJOUT_LISTE
+  LECTURE
+  SUIVI_SERIE
+  SUIVI_UTILISATEUR
+}
+
+enum TypeNotification {
+  NOUVEAU_CHAPITRE
+  REPONSE_COMMENTAIRE
+  LIKE
+  NOUVEL_ABONNE
+  MODERATION
+  SYSTEME
+}
+
+enum CibleSignalement {
+  SERIE
+  CHAPITRE
+  COMMENTAIRE
+  CRITIQUE
+  UTILISATEUR
+}
+
+enum MotifSignalement {
+  CONTENU_ILLEGAL
+  CONTENU_SEXUEL
+  MAUVAISE_CLASSIFICATION
+  DROITS_AUTEUR
+  SPAM
+  HARCELEMENT
+  AUTRE
+}
+
+enum StatutSignalement {
+  OUVERT
+  EN_COURS
+  RESOLU
+  REJETE
+}
+
+enum StatutRetrait {
+  RECUE
+  EN_EXAMEN
+  ACCEPTEE
+  REFUSEE
+}
+
+enum StatutPeriode {
+  BROUILLON
+  CLOTUREE
+}
+
+enum StatutVersement {
+  EN_ATTENTE
+  /// Infos de paiement manquantes ou non validées.
+  BLOQUE
+  VERSE
+}
+
+/// Sources de synchronisation. Toutes sont rattachées à une équipe qui détient
+/// les droits ; SITE_AUTORISE exige en plus une validation de l'admin.
+enum TypeSource {
+  RSS
+  GOOGLE_DRIVE
+  DISCORD
+  SITE_AUTORISE
+}
+
+enum StatutExecution {
+  EN_COURS
+  REUSSIE
+  ECHOUEE
+}
+
+// ════════════════════════════════════════════════════════════════
+// Comptes et authentification
+// ════════════════════════════════════════════════════════════════
+
+model User {
+  id            String   @id @default(cuid())
+  /// Nom affiché.
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // ── Champs propres à la plateforme ──
+  /// Identifiant public unique, en minuscules, utilisé dans l'URL du profil.
+  pseudo          String    @unique
+  bio             String?
+  role            Role      @default(LECTEUR)
+  /// Langue préférée de l'interface.
+  langue          Langue    @default(FR)
+  /// Si renseigné et dans le futur, le compte ne peut plus publier ni commenter.
+  suspenduJusquAu DateTime?
+
+  sessions               Session[]
+  accounts               Account[]
+  preferenceNotification PreferenceNotification?
+  abonnementsPush        AbonnementPush[]
+
+  equipes               MembreEquipe[]
+  invitationsCreees     Invitation[]    @relation("InvitationCreeePar")
+  invitationsAcceptees  Invitation[]    @relation("InvitationAccepteePar")
+  infosPaiementValidees InfosPaiement[]
+
+  seriesDroitsDeclares Serie[]
+  chapitresCrees       Chapitre[]
+  misesEnAvant         MiseEnAvant[]
+
+  progressions Progression[]
+  journal      EntreeJournal[]
+  suivisSeries SuiviSerie[]
+
+  notes               Note[]
+  critiques           Critique[]         @relation("CritiqueAuteur")
+  critiquesMasquees   Critique[]         @relation("CritiqueMasqueePar")
+  likesCritiques      LikeCritique[]
+  listes              Liste[]
+  /// Les lecteurs que ce compte suit.
+  abonnements         SuiviUtilisateur[] @relation("Suiveur")
+  /// Les lecteurs qui suivent ce compte.
+  abonnes             SuiviUtilisateur[] @relation("Suivi")
+  activites           Activite[]         @relation("ActiviteAuteur")
+  activitesCiblees    Activite[]         @relation("ActiviteCible")
+  commentaires        Commentaire[]      @relation("CommentaireAuteur")
+  commentairesMasques Commentaire[]      @relation("CommentaireMasquePar")
+  likesCommentaires   LikeCommentaire[]
+  notifications       Notification[]
+
+  signalementsEmis    Signalement[]       @relation("SignalementAuteur")
+  signalementsRecus   Signalement[]       @relation("SignalementUtilisateurCible")
+  signalementsTraites Signalement[]       @relation("SignalementTraitePar")
+  retraitsTraites     DemandeRetrait[]
+  actionsModeration   JournalModeration[]
+
+  periodesCloturees     PeriodeRevenus[]
+  sourcesCreees         SourceSync[]     @relation("SourceCreeePar")
+  sourcesValidees       SourceSync[]     @relation("SourceValideePar")
+  executionsDeclenchees ExecutionSync[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Moyen de connexion d'un compte : mot de passe (providerId = "credential"),
+/// Google ou Discord.
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  /// Mot de passe haché (uniquement pour providerId = "credential").
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+/// Jetons temporaires : vérification d'email, réinitialisation de mot de passe.
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+/// Canaux activés par type de notification (une ligne par compte).
+model PreferenceNotification {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Nouveau chapitre d'une série suivie
+  chapitreSite  Boolean @default(true)
+  chapitrePush  Boolean @default(true)
+  chapitreEmail Boolean @default(false)
+
+  // Interactions sociales (réponses, likes, nouveaux abonnés)
+  socialSite  Boolean @default(true)
+  socialPush  Boolean @default(false)
+  socialEmail Boolean @default(false)
+
+  majLe DateTime @updatedAt
+}
+
+/// Abonnement Web Push d'un appareil (PWA).
+model AbonnementPush {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  creeLe    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ════════════════════════════════════════════════════════════════
+// Équipes
+// ════════════════════════════════════════════════════════════════
+
+model Equipe {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  nom         String  @unique
+  description String?
+  /// Clé de l'image dans le stockage S3.
+  logoCle     String?
+  siteWeb     String?
+  discord     String?
+
+  statut              StatutEquipe @default(ACTIVE)
+  suspendueLe         DateTime?
+  motifSuspension     String?
+  /// Nombre de demandes de retrait jugées justifiées ; au-delà d'un seuil, l'équipe est suspendue.
+  nbRetraitsJustifies Int          @default(0)
+
+  creeLe DateTime @default(now())
+  majLe  DateTime @updatedAt
+
+  membres         MembreEquipe[]
+  invitations     Invitation[]
+  infosPaiement   InfosPaiement?
+  series          Serie[]
+  vues            VueJournaliere[]
+  partsRevenus    PartRevenus[]
+  sources         SourceSync[]
+  demandesRetrait DemandeRetrait[]
+}
+
+model MembreEquipe {
+  id        String     @id @default(cuid())
+  equipeId  String
+  equipe    Equipe     @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      RoleEquipe @default(MEMBRE)
+  rejointLe DateTime   @default(now())
+
+  @@unique([equipeId, userId])
+  @@index([userId])
+}
+
+/// Invitation envoyée par l'admin (nouvelle équipe) ou par un chef d'équipe (nouveau membre).
+model Invitation {
+  id               String         @id @default(cuid())
+  email            String
+  /// Empreinte du jeton : le jeton en clair n'existe que dans le lien envoyé par email.
+  jetonHache       String         @unique
+  type             TypeInvitation
+  equipeId         String?
+  equipe           Equipe?        @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+  /// Nom d'équipe suggéré par l'admin (type NOUVELLE_EQUIPE).
+  nomEquipePropose String?
+  roleEquipe       RoleEquipe     @default(MEMBRE)
+
+  creeParId     String?
+  creePar       User?     @relation("InvitationCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeLe        DateTime  @default(now())
+  expireLe      DateTime
+  accepteeLe    DateTime?
+  accepteeParId String?
+  accepteePar   User?     @relation("InvitationAccepteePar", fields: [accepteeParId], references: [id], onDelete: SetNull)
+  revoqueeLe    DateTime?
+
+  @@index([email])
+}
+
+/// Informations nécessaires au versement. Sans elles (et sans validation admin),
+/// les parts de l'équipe restent bloquées.
+model InfosPaiement {
+  equipeId String @id
+  equipe   Equipe @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+
+  statutJuridique StatutJuridique
+  raisonSociale   String?
+  siret           String?
+  titulaire       String
+  /// IBAN chiffré au repos par l'application.
+  ibanChiffre     String
+  bic             String?
+  pays            String          @default("FR")
+  adresse         String?
+
+  valideLe    DateTime?
+  valideParId String?
+  validePar   User?     @relation(fields: [valideParId], references: [id], onDelete: SetNull)
+  majLe       DateTime  @updatedAt
+}
+
+// ════════════════════════════════════════════════════════════════
+// Catalogue
+// ════════════════════════════════════════════════════════════════
+
+model Serie {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  titre             String
+  /// Titres alternatifs (original, anglais, abréviations) indexés par la recherche.
+  titresAlternatifs String[]
+  synopsis          String   @default("")
+
+  type           TypeSerie
+  langue         Langue
+  statut         StatutSerie       @default(EN_COURS)
+  classification ClassificationAge @default(TOUT_PUBLIC)
+  sensLecture    SensLecture       @default(VERTICAL)
+  anneeParution  Int?
+
+  couvertureCle    String?
+  banniereCle      String?
+  /// Couleur dominante de la couverture (#rrggbb), affichée pendant le chargement.
+  couleurDominante String?
+
+  equipeId String
+  equipe   Equipe @relation(fields: [equipeId], references: [id], onDelete: Restrict)
+
+  // ── Modération ──
+  statutModeration StatutModeration @default(BROUILLON)
+  motifRefus       String?
+  publieeLe        DateTime?
+
+  // ── Droits d'auteur ──
+  /// Case obligatoire : l'équipe déclare détenir les droits ou l'autorisation de l'ayant droit.
+  droitsDeclares         Boolean   @default(false)
+  droitsDeclaresLe       DateTime?
+  droitsDeclaresParId    String?
+  droitsDeclaresPar      User?     @relation(fields: [droitsDeclaresParId], references: [id], onDelete: SetNull)
+  /// Preuve d'autorisation (fichier), facultative, visible uniquement par l'admin.
+  preuveAutorisationCle  String?
+  preuveAutorisationNote String?
+
+  // ── Compteurs dénormalisés ──
+  /// Moyenne des notes sur 10 (une demi-étoile = 1 point).
+  noteMoyenne       Float     @default(0)
+  nbNotes           Int       @default(0)
+  nbAbonnes         Int       @default(0)
+  nbVues            Int       @default(0)
+  nbChapitres       Int       @default(0)
+  dernierChapitreLe DateTime?
+
+  creeLe DateTime @default(now())
+  majLe  DateTime @updatedAt
+
+  auteurs         SerieAuteur[]
+  genres          SerieGenre[]
+  chapitres       Chapitre[]
+  misesEnAvant    MiseEnAvant[]
+  progressions    Progression[]
+  journal         EntreeJournal[]
+  suivis          SuiviSerie[]
+  notes           Note[]
+  critiques       Critique[]
+  elementsListe   ElementListe[]
+  activites       Activite[]
+  signalements    Signalement[]
+  demandesRetrait DemandeRetrait[]
+  vues            VueJournaliere[]
+  sources         SourceSync[]
+
+  @@index([statutModeration, dernierChapitreLe])
+  @@index([statutModeration, noteMoyenne])
+  @@index([statutModeration, nbVues])
+  @@index([statutModeration, publieeLe])
+  @@index([equipeId])
+  @@index([type, langue])
+}
+
+model Auteur {
+  id     String        @id @default(cuid())
+  slug   String        @unique
+  nom    String
+  bio    String?
+  series SerieAuteur[]
+}
+
+model SerieAuteur {
+  serieId  String
+  serie    Serie      @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  auteurId String
+  auteur   Auteur     @relation(fields: [auteurId], references: [id], onDelete: Cascade)
+  role     RoleAuteur @default(SCENARIO_ET_DESSIN)
+
+  @@id([serieId, auteurId])
+  @@index([auteurId])
+}
+
+model Genre {
+  id     String       @id @default(cuid())
+  slug   String       @unique
+  nomFr  String
+  nomEn  String
+  series SerieGenre[]
+}
+
+model SerieGenre {
+  serieId String
+  serie   Serie  @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  genreId String
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([serieId, genreId])
+  @@index([genreId])
+}
+
+model Chapitre {
+  id      String  @id @default(cuid())
+  serieId String
+  serie   Serie   @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  /// Décimal pour autoriser les chapitres intermédiaires (12.5).
+  numero  Decimal @db.Decimal(7, 2)
+  titre   String?
+
+  statut        StatutChapitre  @default(BROUILLON)
+  origine       OrigineChapitre @default(MANUEL)
+  publieLe      DateTime?
+  /// Date de publication programmée (statut PROGRAMME).
+  programmePour DateTime?
+
+  nbPages        Int @default(0)
+  nbVues         Int @default(0)
+  nbCommentaires Int @default(0)
+
+  creeParId String?
+  creePar   User?    @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  creeLe    DateTime @default(now())
+  majLe     DateTime @updatedAt
+
+  pages        Page[]
+  progressions Progression[]
+  journal      EntreeJournal[]
+  commentaires Commentaire[]
+  activites    Activite[]
+  signalements Signalement[]
+  vues         VueJournaliere[]
+  importation  ChapitreImporte?
+
+  @@unique([serieId, numero])
+  @@index([statut, publieLe])
+  @@index([statut, programmePour])
+}
+
+/// Une image du chapitre. Les longues planches webtoon sont découpées en plusieurs pages.
+model Page {
+  id           String   @id @default(cuid())
+  chapitreId   String
+  chapitre     Chapitre @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  /// Position dans le chapitre, à partir de 0.
+  ordre        Int
+  /// Clé du fichier d'origine dans le stockage.
+  cleOriginale String
+  largeur      Int
+  hauteur      Int
+  /// Variantes générées par sharp : [{ format, largeur, cle }].
+  variantes    Json     @default("[]")
+  /// Aperçu flou minuscule (data URL) affiché pendant le chargement.
+  apercuFlou   String?
+
+  @@unique([chapitreId, ordre])
+}
+
+/// Série mise en avant dans le carrousel de l'accueil (choisie par l'admin).
+model MiseEnAvant {
+  id        String    @id @default(cuid())
+  serieId   String
+  serie     Serie     @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  accroche  String?
+  /// Visuel spécifique ; à défaut, la bannière de la série est utilisée.
+  visuelCle String?
+  ordre     Int       @default(0)
+  actif     Boolean   @default(true)
+  debutLe   DateTime?
+  finLe     DateTime?
+  creeParId String?
+  creePar   User?     @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  creeLe    DateTime  @default(now())
+
+  @@index([actif, ordre])
+}
+
+// ════════════════════════════════════════════════════════════════
+// Lecture
+// ════════════════════════════════════════════════════════════════
+
+/// Position de lecture mémorisée : une ligne par lecteur et par série (« reprendre ma lecture »).
+model Progression {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serieId    String
+  serie      Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  chapitreId String
+  chapitre   Chapitre @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  /// Index de la page en cours (mode page par page).
+  page       Int      @default(0)
+  /// Position de défilement entre 0 et 1 (mode vertical).
+  ratio      Float    @default(0)
+  termine    Boolean  @default(false)
+  majLe      DateTime @updatedAt
+
+  @@unique([userId, serieId])
+  @@index([userId, majLe])
+}
+
+/// Journal de lecture : une entrée datée par chapitre terminé.
+model EntreeJournal {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serieId    String
+  serie      Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  chapitreId String
+  chapitre   Chapitre @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  luLe       DateTime @default(now())
+
+  @@index([userId, luLe])
+  @@index([userId, serieId])
+}
+
+model SuiviSerie {
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serieId  String
+  serie    Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  /// Recevoir une notification à chaque nouveau chapitre.
+  notifier Boolean  @default(true)
+  creeLe   DateTime @default(now())
+
+  @@id([userId, serieId])
+  @@index([serieId])
+}
+
+// ════════════════════════════════════════════════════════════════
+// Communauté
+// ════════════════════════════════════════════════════════════════
+
+model Note {
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serieId String
+  serie   Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  /// De 1 à 10 : une demi-étoile vaut 1 point (contrainte SQL dans la migration).
+  valeur  Int
+  creeLe  DateTime @default(now())
+  majLe   DateTime @updatedAt
+
+  @@id([userId, serieId])
+  @@index([serieId])
+}
+
+model Critique {
+  id      String  @id @default(cuid())
+  userId  String
+  user    User    @relation("CritiqueAuteur", fields: [userId], references: [id], onDelete: Cascade)
+  serieId String
+  serie   Serie   @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  contenu String
+  /// Le texte est masqué par défaut à l'affichage.
+  spoiler Boolean @default(false)
+
+  masquee      Boolean @default(false)
+  masqueeParId String?
+  masqueePar   User?   @relation("CritiqueMasqueePar", fields: [masqueeParId], references: [id], onDelete: SetNull)
+  nbLikes      Int     @default(0)
+
+  creeLe DateTime @default(now())
+  majLe  DateTime @updatedAt
+
+  likes        LikeCritique[]
+  activites    Activite[]
+  signalements Signalement[]
+
+  /// Une critique par lecteur et par série.
+  @@unique([userId, serieId])
+  @@index([serieId, creeLe])
+}
+
+model LikeCritique {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  critiqueId String
+  critique   Critique @relation(fields: [critiqueId], references: [id], onDelete: Cascade)
+  creeLe     DateTime @default(now())
+
+  @@id([userId, critiqueId])
+  @@index([critiqueId])
+}
+
+/// Liste de séries. Les quatre listes de statut (À lire, En cours, Terminé, Abandonné)
+/// sont uniques par lecteur (index partiel dans la migration) ; LIBRE est illimitée.
+model Liste {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        TypeListe @default(LIBRE)
+  nom         String
+  slug        String
+  description String?
+  publique    Boolean   @default(true)
+  creeLe      DateTime  @default(now())
+  majLe       DateTime  @updatedAt
+
+  elements  ElementListe[]
+  activites Activite[]
+
+  @@unique([userId, slug])
+}
+
+model ElementListe {
+  id          String   @id @default(cuid())
+  listeId     String
+  liste       Liste    @relation(fields: [listeId], references: [id], onDelete: Cascade)
+  serieId     String
+  serie       Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  ordre       Int      @default(0)
+  commentaire String?
+  ajouteLe    DateTime @default(now())
+
+  @@unique([listeId, serieId])
+  @@index([serieId])
+}
+
+model SuiviUtilisateur {
+  suiveurId String
+  suiveur   User     @relation("Suiveur", fields: [suiveurId], references: [id], onDelete: Cascade)
+  suiviId   String
+  suivi     User     @relation("Suivi", fields: [suiviId], references: [id], onDelete: Cascade)
+  creeLe    DateTime @default(now())
+
+  @@id([suiveurId, suiviId])
+  @@index([suiviId])
+}
+
+/// Événement du fil d'activité.
+model Activite {
+  id     String       @id @default(cuid())
+  userId String
+  user   User         @relation("ActiviteAuteur", fields: [userId], references: [id], onDelete: Cascade)
+  type   TypeActivite
+
+  serieId     String?
+  serie       Serie?    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  chapitreId  String?
+  chapitre    Chapitre? @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  critiqueId  String?
+  critique    Critique? @relation(fields: [critiqueId], references: [id], onDelete: Cascade)
+  listeId     String?
+  liste       Liste?    @relation(fields: [listeId], references: [id], onDelete: Cascade)
+  cibleUserId String?
+  cibleUser   User?     @relation("ActiviteCible", fields: [cibleUserId], references: [id], onDelete: Cascade)
+  /// Détails propres au type (ex. valeur de la note).
+  donnees     Json?
+
+  creeLe DateTime @default(now())
+
+  @@index([userId, creeLe])
+}
+
+model Commentaire {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation("CommentaireAuteur", fields: [userId], references: [id], onDelete: Cascade)
+  chapitreId String
+  chapitre   Chapitre      @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  /// Réponse à un autre commentaire (un seul niveau d'imbrication à l'affichage).
+  parentId   String?
+  parent     Commentaire?  @relation("Reponses", fields: [parentId], references: [id], onDelete: Cascade)
+  reponses   Commentaire[] @relation("Reponses")
+  contenu    String
+
+  masque      Boolean @default(false)
+  masqueParId String?
+  masquePar   User?   @relation("CommentaireMasquePar", fields: [masqueParId], references: [id], onDelete: SetNull)
+  nbLikes     Int     @default(0)
+
+  creeLe DateTime @default(now())
+  majLe  DateTime @updatedAt
+
+  likes        LikeCommentaire[]
+  signalements Signalement[]
+
+  @@index([chapitreId, creeLe])
+  @@index([userId])
+}
+
+model LikeCommentaire {
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentaireId String
+  commentaire   Commentaire @relation(fields: [commentaireId], references: [id], onDelete: Cascade)
+  creeLe        DateTime    @default(now())
+
+  @@id([userId, commentaireId])
+  @@index([commentaireId])
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    TypeNotification
+  /// Données d'affichage (identifiants de série, de chapitre, auteur de l'action…).
+  donnees Json
+  /// Lien interne ouvert au clic.
+  lien    String?
+  lueLe   DateTime?
+  creeLe  DateTime         @default(now())
+
+  @@index([userId, lueLe, creeLe])
+}
+
+// ════════════════════════════════════════════════════════════════
+// Modération et droits d'auteur
+// ════════════════════════════════════════════════════════════════
+
+/// Signalement d'un contenu. Une seule des colonnes cibles est renseignée, selon « cible ».
+model Signalement {
+  id       String  @id @default(cuid())
+  /// Null si le signalement vient d'un visiteur non connecté.
+  auteurId String?
+  auteur   User?   @relation("SignalementAuteur", fields: [auteurId], references: [id], onDelete: SetNull)
+
+  cible              CibleSignalement
+  serieId            String?
+  serie              Serie?           @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  chapitreId         String?
+  chapitre           Chapitre?        @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  commentaireId      String?
+  commentaire        Commentaire?     @relation(fields: [commentaireId], references: [id], onDelete: Cascade)
+  critiqueId         String?
+  critique           Critique?        @relation(fields: [critiqueId], references: [id], onDelete: Cascade)
+  utilisateurCibleId String?
+  utilisateurCible   User?            @relation("SignalementUtilisateurCible", fields: [utilisateurCibleId], references: [id], onDelete: Cascade)
+
+  motif   MotifSignalement
+  details String?
+
+  statut      StatutSignalement @default(OUVERT)
+  traiteParId String?
+  traitePar   User?             @relation("SignalementTraitePar", fields: [traiteParId], references: [id], onDelete: SetNull)
+  traiteLe    DateTime?
+  decision    String?
+
+  creeLe DateTime @default(now())
+
+  @@index([statut, creeLe])
+}
+
+/// Demande de retrait déposée par un ayant droit via le formulaire public.
+/// L'historique est conservé même après traitement.
+model DemandeRetrait {
+  id        String @id @default(cuid())
+  /// Numéro de dossier communiqué au demandeur.
+  reference String @unique
+
+  // ── Demandeur ──
+  nomDemandeur String
+  /// Ayant droit ou représentant.
+  qualite      String
+  organisation String?
+  email        String
+  telephone    String?
+  adresse      String?
+
+  // ── Œuvre concernée ──
+  oeuvre                String
+  descriptionDroits     String
+  urls                  String[]
+  declarationSurHonneur Boolean
+  signature             String
+
+  // ── Traitement ──
+  statut      StatutRetrait @default(RECUE)
+  /// Renseigné à la décision ; une demande justifiée compte contre l'équipe.
+  justifiee   Boolean?
+  serieId     String?
+  serie       Serie?        @relation(fields: [serieId], references: [id], onDelete: SetNull)
+  equipeId    String?
+  equipe      Equipe?       @relation(fields: [equipeId], references: [id], onDelete: SetNull)
+  traiteParId String?
+  traitePar   User?         @relation(fields: [traiteParId], references: [id], onDelete: SetNull)
+  traiteLe    DateTime?
+  reponse     String?
+
+  creeLe DateTime @default(now())
+
+  @@index([statut, creeLe])
+}
+
+/// Trace de chaque action de modération ou d'administration.
+model JournalModeration {
+  id        String   @id @default(cuid())
+  acteurId  String?
+  acteur    User?    @relation(fields: [acteurId], references: [id], onDelete: SetNull)
+  /// Ex. « serie.retirer », « commentaire.masquer », « equipe.suspendre ».
+  action    String
+  cibleType String
+  cibleId   String
+  details   Json?
+  creeLe    DateTime @default(now())
+
+  @@index([cibleType, cibleId])
+  @@index([creeLe])
+}
+
+// ════════════════════════════════════════════════════════════════
+// Publicité et revenus
+// ════════════════════════════════════════════════════════════════
+
+/// Emplacement publicitaire configurable (jamais au milieu des planches).
+model EmplacementPub {
+  id          String   @id @default(cuid())
+  /// Identifiant technique, ex. « lecteur-entre-chapitres », « serie-bas-de-page ».
+  cle         String   @unique
+  nom         String
+  description String?
+  actif       Boolean  @default(false)
+  /// Code fourni par la régie publicitaire.
+  code        String?
+  mobile      Boolean  @default(true)
+  bureau      Boolean  @default(true)
+  majLe       DateTime @updatedAt
+}
+
+/// Vues dédoublonnées, agrégées par chapitre et par jour.
+/// Le dédoublonnage (une vue par lecteur/appareil et par période) se fait dans Redis.
+model VueJournaliere {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  chapitreId String
+  chapitre   Chapitre @relation(fields: [chapitreId], references: [id], onDelete: Cascade)
+  serieId    String
+  serie      Serie    @relation(fields: [serieId], references: [id], onDelete: Cascade)
+  equipeId   String
+  equipe     Equipe   @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+  nbVues     Int      @default(0)
+
+  @@unique([chapitreId, date])
+  @@index([equipeId, date])
+  @@index([serieId, date])
+}
+
+/// Répartition mensuelle : l'admin saisit le revenu publicitaire total du mois.
+model PeriodeRevenus {
+  id                  String        @id @default(cuid())
+  /// Premier jour du mois concerné.
+  mois                DateTime      @unique @db.Date
+  revenuTotalCentimes Int
+  /// Part du revenu reversée aux équipes, en pourcentage.
+  pourcentageReverse  Decimal       @db.Decimal(5, 2)
+  totalVues           Int           @default(0)
+  statut              StatutPeriode @default(BROUILLON)
+  clotureeLe          DateTime?
+  clotureeParId       String?
+  clotureePar         User?         @relation(fields: [clotureeParId], references: [id], onDelete: SetNull)
+  creeLe              DateTime      @default(now())
+
+  parts PartRevenus[]
+}
+
+/// Part d'une équipe pour un mois donné, proportionnelle à ses vues.
+model PartRevenus {
+  id                 String          @id @default(cuid())
+  periodeId          String
+  periode            PeriodeRevenus  @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  equipeId           String
+  equipe             Equipe          @relation(fields: [equipeId], references: [id], onDelete: Restrict)
+  nbVues             Int
+  montantCentimes    Int
+  statut             StatutVersement @default(EN_ATTENTE)
+  verseLe            DateTime?
+  referenceVersement String?
+
+  @@unique([periodeId, equipeId])
+  @@index([equipeId])
+}
+
+/// Réglages globaux modifiables par l'admin (ex. pourcentage reversé par défaut,
+/// seuil de retraits avant suspension).
+model Reglage {
+  cle    String   @id
+  valeur Json
+  majLe  DateTime @updatedAt
+}
+
+// ════════════════════════════════════════════════════════════════
+// Synchronisation (robots)
+// ════════════════════════════════════════════════════════════════
+
+/// Source surveillée par le robot. Toujours rattachée à une équipe : le robot ne publie
+/// que des contenus dont l'équipe détient les droits.
+model SourceSync {
+  id            String     @id @default(cuid())
+  equipeId      String
+  equipe        Equipe     @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+  /// Série alimentée par la source ; null si la source couvre plusieurs séries.
+  serieId       String?
+  serie         Serie?     @relation(fields: [serieId], references: [id], onDelete: SetNull)
+  type          TypeSource
+  nom           String
+  url           String?
+  /// Paramètres propres au type (identifiant de dossier Drive, sélecteurs, etc.).
+  config        Json       @default("{}")
+  /// Jetons d'accès chiffrés au repos par l'application.
+  secretChiffre String?
+
+  // ── Autorisation (obligatoire pour SITE_AUTORISE) ──
+  autorisationNote      String?
+  autorisationPreuveCle String?
+  valideeLe             DateTime?
+  valideeParId          String?
+  valideePar            User?     @relation("SourceValideePar", fields: [valideeParId], references: [id], onDelete: SetNull)
+
+  actif               Boolean   @default(true)
+  frequenceMinutes    Int       @default(60)
+  dernierPassageLe    DateTime?
+  dernierSuccesLe     DateTime?
+  erreursConsecutives Int       @default(0)
+
+  creeParId String?
+  creePar   User?    @relation("SourceCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeLe    DateTime @default(now())
+
+  executions ExecutionSync[]
+  imports    ChapitreImporte[]
+
+  @@index([actif, dernierPassageLe])
+  @@index([equipeId])
+}
+
+/// Historique d'un passage du robot sur une source.
+model ExecutionSync {
+  id              String          @id @default(cuid())
+  sourceId        String
+  source          SourceSync      @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  statut          StatutExecution @default(EN_COURS)
+  /// Renseigné quand un admin relance le robot à la main.
+  declencheeParId String?
+  declencheePar   User?           @relation(fields: [declencheeParId], references: [id], onDelete: SetNull)
+  debutLe         DateTime        @default(now())
+  finLe           DateTime?
+  nbDetectes      Int             @default(0)
+  nbImportes      Int             @default(0)
+  erreur          String?
+  journal         Json?
+
+  @@index([sourceId, debutLe])
+}
+
+/// Dédoublonnage : un chapitre externe n'est importé qu'une seule fois par source.
+model ChapitreImporte {
+  id                 String     @id @default(cuid())
+  sourceId           String
+  source             SourceSync @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  identifiantExterne String
+  chapitreId         String?    @unique
+  chapitre           Chapitre?  @relation(fields: [chapitreId], references: [id], onDelete: SetNull)
+  importeLe          DateTime   @default(now())
+
+  @@unique([sourceId, identifiantExterne])
+}

@@ -1,0 +1,168 @@
+{
+  "Meta": {
+    "titre": "{site} — Webtoons, mangas et manhwas en ligne",
+    "description": "Lisez des webtoons, mangas et manhwas publiés par leurs auteurs et leurs équipes. Notez, critiquez et partagez vos listes."
+  },
+  "Navigation": {
+    "principale": "Navigation principale",
+    "allerAuContenu": "Aller au contenu",
+    "accueil": "Accueil",
+    "catalogue": "Catalogue",
+    "bibliotheque": "Bibliothèque",
+    "compte": "Compte",
+    "connexion": "Connexion",
+    "inscription": "Créer un compte",
+    "monCompte": "Mon compte",
+    "rechercher": "Rechercher",
+    "recherchePlaceholder": "Série, auteur, équipe…"
+  },
+  "Theme": {
+    "libelle": "Thème",
+    "systeme": "Système",
+    "clair": "Clair",
+    "sombre": "Sombre"
+  },
+  "Langue": {
+    "libelle": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "Classification": {
+    "TOUT_PUBLIC": "Tout public",
+    "DOUZE_PLUS": "12+",
+    "SEIZE_PLUS": "16+"
+  },
+  "Accueil": {
+    "surtitre": "Webtoons · Mangas · Manhwas",
+    "titre": "Lisez. Notez. Partagez vos listes.",
+    "accroche": "Des séries publiées par leurs auteurs et leurs équipes, pensées pour être lues d'une main sur votre téléphone.",
+    "creerCompte": "Créer un compte",
+    "parcourir": "Parcourir le catalogue",
+    "atouts": {
+      "titre": "Ce que vous pourrez faire ici",
+      "lire": {
+        "titre": "Lire sans friction",
+        "texte": "Défilement vertical pour les webtoons, page par page pour les mangas. Votre position est mémorisée."
+      },
+      "suivre": {
+        "titre": "Suivre vos séries",
+        "texte": "Une notification à chaque nouveau chapitre, sur le site, sur votre téléphone ou par email."
+      },
+      "partager": {
+        "titre": "Tenir votre journal",
+        "texte": "Notes en demi-étoiles, critiques, listes publiques ou privées et journal de lecture."
+      }
+    }
+  },
+  "Chantier": {
+    "titre": "Cette page arrive bientôt",
+    "catalogue": "Le catalogue et la recherche sont prévus pour la phase 2.",
+    "rechercheEnAttente": "Votre recherche « {requete} » fonctionnera dès que le catalogue sera en place.",
+    "bibliotheque": "Vos séries suivies, vos listes et votre journal de lecture arrivent avec la phase 4.",
+    "retourAccueil": "Retour à l'accueil"
+  },
+  "Auth": {
+    "retourAccueil": "Retour à l'accueil",
+    "email": "Adresse email",
+    "motDePasse": "Mot de passe",
+    "afficherMotDePasse": "Afficher le mot de passe",
+    "masquerMotDePasse": "Masquer le mot de passe",
+    "pseudo": "Pseudo",
+    "ou": "ou",
+    "continuerAvec": "Continuer avec {fournisseur}",
+    "connexion": {
+      "titre": "Connexion",
+      "sousTitre": "Retrouvez vos séries suivies et vos listes.",
+      "bouton": "Se connecter",
+      "motDePasseOublie": "Mot de passe oublié ?",
+      "pasDeCompte": "Pas encore de compte ?",
+      "creerCompte": "Créer un compte",
+      "motDePasseModifie": "Votre mot de passe a été modifié. Vous pouvez vous connecter."
+    },
+    "inscription": {
+      "titre": "Créer un compte",
+      "sousTitre": "Gratuit. Suivez des séries, notez-les et créez vos listes.",
+      "bouton": "Créer mon compte",
+      "aidePseudo": "{min} à {max} caractères : lettres, chiffres et tiret bas. Il apparaît dans l'adresse de votre profil.",
+      "aideMotDePasse": "Au moins {min} caractères.",
+      "dejaInscrit": "Déjà inscrit ?",
+      "seConnecter": "Se connecter"
+    },
+    "oubli": {
+      "titre": "Mot de passe oublié",
+      "sousTitre": "Indiquez votre adresse email : nous vous envoyons un lien pour choisir un nouveau mot de passe.",
+      "bouton": "Envoyer le lien",
+      "envoye": "Si un compte existe pour {email}, un email vient de partir. Le lien est valable une heure.",
+      "retourConnexion": "Retour à la connexion"
+    },
+    "reinitialisation": {
+      "titre": "Nouveau mot de passe",
+      "sousTitre": "Choisissez un nouveau mot de passe. Vous serez déconnecté de vos autres appareils.",
+      "nouveauMotDePasse": "Nouveau mot de passe",
+      "bouton": "Enregistrer le mot de passe",
+      "lienInvalide": "Ce lien n'est plus valable. Demandez-en un nouveau.",
+      "redemander": "Demander un nouveau lien"
+    },
+    "erreurs": {
+      "INVALID_EMAIL_OR_PASSWORD": "Adresse email ou mot de passe incorrect.",
+      "USER_ALREADY_EXISTS": "Un compte existe déjà avec cette adresse email. Connectez-vous ou réinitialisez votre mot de passe.",
+      "INVALID_EMAIL": "Cette adresse email n'est pas valide.",
+      "PASSWORD_TOO_SHORT": "Le mot de passe doit contenir au moins {min} caractères.",
+      "PASSWORD_TOO_LONG": "Ce mot de passe est trop long.",
+      "INVALID_TOKEN": "Ce lien n'est plus valable. Demandez-en un nouveau.",
+      "PSEUDO_DEJA_PRIS": "Ce pseudo est déjà pris. Essayez-en un autre.",
+      "PSEUDO_INVALIDE": "Ce pseudo n'est pas valide.",
+      "TROP_DE_TENTATIVES": "Trop de tentatives. Patientez une minute avant de réessayer.",
+      "INCONNUE": "L'opération n'a pas abouti. Vérifiez votre connexion et réessayez."
+    },
+    "pseudoErreurs": {
+      "TROP_COURT": "Le pseudo doit contenir au moins {min} caractères.",
+      "TROP_LONG": "Le pseudo ne peut pas dépasser {max} caractères.",
+      "CARACTERES_INVALIDES": "Utilisez uniquement des lettres sans accent, des chiffres et le tiret bas.",
+      "RESERVE": "Ce pseudo est réservé. Choisissez-en un autre."
+    }
+  },
+  "Compte": {
+    "titre": "Mon compte",
+    "profil": "Profil",
+    "email": "Adresse email",
+    "emailVerifie": "Vérifiée",
+    "emailNonVerifie": "Non vérifiée",
+    "verificationTexte": "Confirmez votre adresse pour pouvoir commenter et publier des critiques.",
+    "renvoyerVerification": "Renvoyer l'email de vérification",
+    "verificationEnvoyee": "Email envoyé. Pensez à regarder dans vos indésirables.",
+    "role": "Rôle",
+    "roles": {
+      "LECTEUR": "Lecteur",
+      "MODERATEUR": "Modérateur",
+      "ADMIN": "Administrateur"
+    },
+    "membreDepuis": "Membre depuis le {date}",
+    "preferences": "Préférences",
+    "deconnexion": "Se déconnecter"
+  },
+  "Introuvable": {
+    "titre": "Page introuvable",
+    "texte": "Cette page n'existe pas ou a été déplacée.",
+    "retour": "Retour à l'accueil"
+  },
+  "Pied": {
+    "droits": "© {annee} {site}"
+  },
+  "Emails": {
+    "verification": {
+      "sujet": "Confirmez votre adresse email — {site}",
+      "titre": "Bienvenue, {nom}",
+      "corps": "Confirmez votre adresse email pour finaliser votre compte {site}.",
+      "bouton": "Confirmer mon adresse",
+      "note": "Si vous n'avez pas créé de compte, ignorez cet email."
+    },
+    "reinitialisation": {
+      "sujet": "Réinitialisez votre mot de passe — {site}",
+      "titre": "Bonjour {nom}",
+      "corps": "Vous avez demandé à changer de mot de passe. Ce lien est valable une heure.",
+      "bouton": "Choisir un nouveau mot de passe",
+      "note": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe reste inchangé."
+    }
+  }
+}
