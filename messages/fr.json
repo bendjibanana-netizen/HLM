@@ -441,7 +441,46 @@
     },
     "nouvelleEquipe": "Nouvelle équipe",
     "rejoint": "Rejoindre {equipe}",
-    "revoquer": "Annuler"
+    "revoquer": "Annuler",
+    "retraits": "Demandes de retrait",
+    "retraitsAide": "Demandes des ayants droit et équipes suspendues.",
+    "bots": "Robots de synchronisation",
+    "botsAide": "Sources surveillées, historique et erreurs.",
+    "retrait": {
+      "aucune": "Aucune demande de retrait.",
+      "aTraiter": "À traiter",
+      "historique": "Historique",
+      "demandeur": "Demandeur",
+      "qualite": {
+        "AYANT_DROIT": "Ayant droit",
+        "REPRESENTANT": "Représentant"
+      },
+      "oeuvre": "Œuvre",
+      "droits": "Droits invoqués",
+      "urls": "Pages visées",
+      "serie": "Série à retirer",
+      "aucuneSerie": "— Aucune série reconnue, choisir —",
+      "reponse": "Réponse envoyée au demandeur",
+      "accepter": "Accepter et retirer la série",
+      "refuser": "Refuser la demande",
+      "etat": {
+        "RECUE": "Reçue",
+        "EN_EXAMEN": "En examen",
+        "ACCEPTEE": "Acceptée",
+        "REFUSEE": "Refusée"
+      },
+      "equipeSuspendue": "Demande acceptée. L'équipe a atteint le seuil de retraits et vient d'être suspendue.",
+      "erreurs": {
+        "SERIE_REQUISE": "Choisissez la série à retirer.",
+        "DONNEES_INVALIDES": "Rédigez une réponse (5 caractères au moins).",
+        "DEFAUT": "La décision n'a pas pu être enregistrée."
+      },
+      "equipesSuspendues": "Équipes suspendues",
+      "aucuneSuspendue": "Aucune équipe suspendue.",
+      "retraitsJustifies": "{nombre, plural, one {# retrait justifié} other {# retraits justifiés}}",
+      "lever": "Lever la suspension",
+      "seuil": "Seuil de suspension : {nombre} retraits justifiés."
+    }
   },
   "Moderation": {
     "titre": "Modération",
@@ -456,7 +495,24 @@
     "valider": "Valider et publier",
     "refuser": "Refuser",
     "motif": "Motif du refus (transmis à l'équipe)",
-    "motifRequis": "Indiquez un motif pour refuser."
+    "motifRequis": "Indiquez un motif pour refuser.",
+    "signalements": "Signalements ouverts",
+    "aucunSignalement": "Aucun signalement à traiter.",
+    "signalePar": "Signalé par {nom}",
+    "visiteur": "un visiteur",
+    "cibles": {
+      "SERIE": "Série",
+      "CHAPITRE": "Chapitre",
+      "COMMENTAIRE": "Commentaire",
+      "CRITIQUE": "Critique",
+      "UTILISATEUR": "Compte"
+    },
+    "commentaireDecision": "Note de décision (facultatif)",
+    "rejeter": "Rejeter le signalement",
+    "retirer": "Masquer ou retirer le contenu",
+    "suspendre": "Retirer et suspendre l'auteur 30 jours",
+    "voir": "Voir le contenu",
+    "contenuSupprime": "Contenu déjà supprimé."
   },
   "Communaute": {
     "suivre": "Suivre",

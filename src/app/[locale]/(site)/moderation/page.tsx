@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { DecisionSerie } from "@/components/equipe/decision-serie";
+import { Signalements } from "@/components/moderation/signalements";
 import { ImageCouverture } from "@/components/serie/image-couverture";
 import { Badge, BadgeClassification } from "@/components/ui/badge";
 import { Carte } from "@/components/ui/carte";
@@ -23,6 +24,7 @@ export default async function PageModeration() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6">
       <h1 className="text-3xl font-extrabold">{t("Moderation.titre")}</h1>
+      <Signalements />
       <h2 className="text-xl font-bold">
         {t("Moderation.seriesEnAttente")} <span className="text-base text-texte-doux">({series.length})</span>
       </h2>

@@ -11,11 +11,17 @@ export const metadata: Metadata = { title: "Administration", robots: { index: fa
 export default async function PageAdmin() {
   await exigerRole("ADMIN", "/admin");
   const t = await getTranslations("Admin");
-  const enAttente = await db.serie.count({ where: { statutModeration: "EN_ATTENTE" } });
+  const [seriesEnAttente, signalements, retraits] = await Promise.all([
+    db.serie.count({ where: { statutModeration: "EN_ATTENTE" } }),
+    db.signalement.count({ where: { statut: { in: ["OUVERT", "EN_COURS"] } } }),
+    db.demandeRetrait.count({ where: { statut: { in: ["RECUE", "EN_EXAMEN"] } } }),
+  ]);
 
   const rubriques: { chemin: CheminStatique; titre: string; aide: string; compteur?: number }[] = [
     { chemin: "/admin/invitations", titre: t("invitations"), aide: t("invitationsAide") },
-    { chemin: "/moderation", titre: t("moderation"), aide: t("moderationAide"), compteur: enAttente },
+    { chemin: "/moderation", titre: t("moderation"), aide: t("moderationAide"), compteur: seriesEnAttente + signalements },
+    { chemin: "/admin/retraits", titre: t("retraits"), aide: t("retraitsAide"), compteur: retraits },
+    { chemin: "/admin/bots", titre: t("bots"), aide: t("botsAide") },
   ];
 
   return (

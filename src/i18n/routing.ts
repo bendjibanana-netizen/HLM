@@ -33,6 +33,8 @@ export const routing = defineRouting({
     "/equipe/series/[id]/chapitres/nouveau": { fr: "/equipe/series/[id]/chapitres/nouveau", en: "/team/series/[id]/chapters/new" },
     "/admin": "/admin",
     "/admin/invitations": "/admin/invitations",
+    "/admin/retraits": "/admin/retraits",
+    "/admin/bots": "/admin/bots",
     "/moderation": "/moderation",
   },
 });
