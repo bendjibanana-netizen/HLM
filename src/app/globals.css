@@ -42,8 +42,9 @@
   }
 }
 
-/* Thème sombre choisi explicitement par le lecteur */
-:root[data-theme="sombre"] {
+/* Thème sombre choisi explicitement par le lecteur, ou imposé à une zone (.theme-sombre : le lecteur) */
+:root[data-theme="sombre"],
+.theme-sombre {
   color-scheme: dark;
   --fond: #0e0e12;
   --surface: #17171d;

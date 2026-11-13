@@ -33,31 +33,23 @@
     "SEIZE_PLUS": "16+"
   },
   "Accueil": {
-    "surtitre": "Webtoons · Manga · Manhwa",
-    "titre": "Read. Rate. Share your lists.",
-    "accroche": "Series published by their authors and teams, built to be read one-handed on your phone.",
-    "creerCompte": "Sign up",
-    "parcourir": "Browse the catalogue",
-    "atouts": {
-      "titre": "What you will be able to do here",
-      "lire": {
-        "titre": "Read without friction",
-        "texte": "Vertical scrolling for webtoons, page by page for manga. Your position is remembered."
-      },
-      "suivre": {
-        "titre": "Follow your series",
-        "texte": "A notification for every new chapter: on the site, on your phone or by email."
-      },
-      "partager": {
-        "titre": "Keep your diary",
-        "texte": "Half-star ratings, reviews, public or private lists and a reading diary."
-      }
-    }
+    "aLaUne": "Featured",
+    "lire": "Read",
+    "voirLaSerie": "View series",
+    "reprendre": "Continue reading",
+    "reprendreChapitre": "Chapter {numero}",
+    "sorties": "This week",
+    "aujourdhui": "Today",
+    "hier": "Yesterday",
+    "tendances": "Trending",
+    "nouveautes": "New series",
+    "mieuxNotees": "Top rated",
+    "toutVoir": "See all",
+    "vide": "The catalogue is still empty.",
+    "videAide": "Run “npm run db:demo” to load the demo series."
   },
   "Chantier": {
     "titre": "This page is coming soon",
-    "catalogue": "The catalogue and search are planned for phase 2.",
-    "rechercheEnAttente": "Your search for “{requete}” will work as soon as the catalogue is in place.",
     "bibliotheque": "Your followed series, lists and reading diary arrive with phase 4.",
     "retourAccueil": "Back to home"
   },
@@ -164,5 +156,115 @@
       "bouton": "Choose a new password",
       "note": "If you did not request this, ignore this email: your password stays unchanged."
     }
+  },
+  "Serie": {
+    "chapitre": "Chapter {numero}",
+    "chapitres": "{nombre, plural, =0 {No chapters} one {# chapter} other {# chapters}}",
+    "commencer": "Start reading",
+    "dernier": "Latest chapter",
+    "synopsis": "Synopsis",
+    "listeChapitres": "Chapters",
+    "aucunChapitre": "No chapter has been published yet.",
+    "auteurs": "Authors",
+    "equipe": "Team",
+    "langue": "Language",
+    "statut": "Status",
+    "annee": "Released",
+    "titresAlternatifs": "Other titles",
+    "note": "{note} out of 5",
+    "notes": "{nombre, plural, one {# rating} other {# ratings}}",
+    "pasDeNote": "No ratings yet",
+    "vues": "{nombre, plural, one {# view} other {# views}}",
+    "compteRequis": "Account required to read",
+    "ordreRecent": "Newest first",
+    "ordreAncien": "Oldest first",
+    "couverture": "Cover of {titre}"
+  },
+  "Type": {
+    "WEBTOON": "Webtoon",
+    "MANGA": "Manga",
+    "MANHWA": "Manhwa",
+    "MANHUA": "Manhua"
+  },
+  "Statut": {
+    "EN_COURS": "Ongoing",
+    "TERMINE": "Completed",
+    "EN_PAUSE": "On hiatus",
+    "ABANDONNE": "Dropped"
+  },
+  "LangueSerie": {
+    "FR": "French",
+    "EN": "English"
+  },
+  "Avertissement": {
+    "titre": "Series rated 16+",
+    "texte": "This series contains violence or mature themes. It is not suitable for readers under 16.",
+    "continuer": "I am 16 or older, continue",
+    "retour": "Go back"
+  },
+  "Catalogue": {
+    "titre": "Browse",
+    "resultats": "{nombre, plural, =0 {No series} one {# series} other {# series}}",
+    "pour": "for “{requete}”",
+    "filtres": "Filters",
+    "filtresActifs": "{nombre, plural, one {# filter} other {# filters}}",
+    "effacer": "Clear all",
+    "appliquer": "Show results",
+    "fermer": "Close",
+    "type": "Type",
+    "langue": "Language",
+    "genres": "Genres",
+    "statut": "Status",
+    "classification": "Age rating",
+    "note": "Minimum rating",
+    "noteToutes": "Any",
+    "noteMin": "{etoiles} and up",
+    "tri": "Sort by",
+    "tris": {
+      "pertinence": "Relevance",
+      "tendances": "Trending",
+      "note": "Top rated",
+      "recent": "Recently updated",
+      "titre": "Title (A → Z)"
+    },
+    "aucun": "No series match",
+    "aucunAide": "Try another word or remove a filter.",
+    "indisponible": "Search is temporarily unavailable",
+    "indisponibleAide": "Try again in a moment.",
+    "precedente": "Previous page",
+    "suivante": "Next page",
+    "page": "Page {page} of {pages}"
+  },
+  "Recherche": {
+    "suggestions": "Suggestions",
+    "toutVoir": "See all results for “{requete}”",
+    "aucune": "No series found"
+  },
+  "Lecteur": {
+    "retour": "Back to series",
+    "reglages": "Reading settings",
+    "fermer": "Close",
+    "chapitre": "Chapter {numero}",
+    "page": "{page} / {total}",
+    "precedent": "Previous chapter",
+    "suivant": "Next chapter",
+    "pagePrecedente": "Previous page",
+    "pageSuivante": "Next page",
+    "mode": "Reading mode",
+    "modeVertical": "Scroll",
+    "modePages": "Page by page",
+    "sens": "Reading direction",
+    "sensRtl": "Right → left",
+    "sensLtr": "Left → right",
+    "largeur": "Page width",
+    "etroite": "Narrow",
+    "moyenne": "Medium",
+    "large": "Wide",
+    "pleinEcran": "Full screen",
+    "quitterPleinEcran": "Exit full screen",
+    "fin": "End of chapter {numero}",
+    "finSerie": "You are all caught up.",
+    "planche": "Page {page}",
+    "aide": "Tap the centre to show or hide the controls."
   }
 }

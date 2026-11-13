@@ -27,6 +27,15 @@ const schema = z.object({
   SMTP_USER: optionnelle,
   SMTP_PASSWORD: optionnelle,
   EMAIL_EXPEDITEUR: z.string().default("HLM <ne-pas-repondre@localhost>"),
+
+  S3_ENDPOINT: z.url().default("http://localhost:9000"),
+  S3_REGION: z.string().default("us-east-1"),
+  S3_BUCKET: z.string().default("hlm"),
+  S3_ACCESS_KEY_ID: z.string().default("cle-acces-dev"),
+  S3_SECRET_ACCESS_KEY: z.string().default("cle-secrete-dev"),
+
+  MEILISEARCH_URL: z.url().default("http://localhost:7700"),
+  MEILISEARCH_CLE: optionnelle,
 });
 
 const resultat = schema.safeParse(process.env);

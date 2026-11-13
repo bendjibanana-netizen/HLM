@@ -10,6 +10,8 @@ export const routing = defineRouting({
   pathnames: {
     "/": "/",
     "/catalogue": { fr: "/catalogue", en: "/browse" },
+    "/serie/[slug]": { fr: "/serie/[slug]", en: "/series/[slug]" },
+    "/lire/[slug]/[numero]": { fr: "/lire/[slug]/[numero]", en: "/read/[slug]/[numero]" },
     "/bibliotheque": { fr: "/bibliotheque", en: "/library" },
     "/compte": { fr: "/compte", en: "/account" },
     "/connexion": { fr: "/connexion", en: "/login" },
@@ -23,3 +25,5 @@ export const routing = defineRouting({
 export type Locale = (typeof routing.locales)[number];
 /** Clé interne d'une page (toujours la forme française). */
 export type Chemin = keyof typeof routing.pathnames;
+/** Pages sans paramètre dans l'adresse (tout sauf /serie/[slug], /lire/[slug]/[numero]…). */
+export type CheminStatique = Exclude<Chemin, `${string}[${string}`>;

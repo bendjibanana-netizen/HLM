@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { cache } from "react";
 import { getPathname, redirect } from "@/i18n/navigation";
-import type { Chemin } from "@/i18n/routing";
+import type { CheminStatique } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
 import { aAuMoinsLeRole, type RoleGlobal } from "@/lib/permissions";
 
@@ -18,7 +18,7 @@ export const obtenirSession = cache(async () => {
  * Exige un compte connecté ; sinon redirige vers la page de connexion,
  * qui renverra ensuite le lecteur vers la page `retour` (dans sa langue).
  */
-export async function exigerConnexion(retour: Chemin) {
+export async function exigerConnexion(retour: CheminStatique) {
   const session = await obtenirSession();
   if (!session) {
     const locale = await getLocale();
@@ -32,7 +32,7 @@ export async function exigerConnexion(retour: Chemin) {
  * Exige un rôle minimal. Un compte connecté sans le rôle reçoit une page 404 :
  * on ne révèle pas l'existence des espaces d'administration.
  */
-export async function exigerRole(roleExige: RoleGlobal, retour: Chemin) {
+export async function exigerRole(roleExige: RoleGlobal, retour: CheminStatique) {
   const session = await exigerConnexion(retour);
   if (!aAuMoinsLeRole(session.user.role as RoleGlobal, roleExige)) {
     notFound();
