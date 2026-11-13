@@ -621,5 +621,73 @@
       "NON_VALIDEE": "Approve the source first.",
       "DEFAUT": "That did not go through."
     }
+  },
+  "Pub": {
+    "libelle": "Advertisement"
+  },
+  "Stats": {
+    "statistiques": "Statistics",
+    "revenus": "Revenue",
+    "periode": "Last 30 days",
+    "vues30": "Views (30 days)",
+    "vuesTotal": "Total views",
+    "abonnes": "Followers",
+    "noteMoyenne": "Average rating",
+    "evolution": "Views per day",
+    "evolutionAide": "De-duplicated views of all your series, over 30 days.",
+    "tableau": "Show the figures as a table",
+    "jour": "Day",
+    "vues": "Views",
+    "vuesJour": "{nombre, plural, =0 {No views} one {# view} other {# views}}",
+    "parSerie": "By series",
+    "parChapitre": "Most read chapters (30 days)",
+    "serie": "Series",
+    "chapitre": "Chapter",
+    "aucuneVue": "No views recorded over the period.",
+    "estimation": "Estimate for the current month",
+    "estimationTexte": "Based on your {vues, plural, one {# view} other {# views}} this month and the revenue per view of the last distributed month. The final amount depends on the actual advertising revenue for the month.",
+    "estimationIndisponible": "You have {vues, plural, one {# view} other {# views}} this month. The estimate in euros will be available after the first monthly distribution.",
+    "historique": "History",
+    "aucunHistorique": "No distribution yet.",
+    "mois": "Month",
+    "montant": "Amount",
+    "etat": "Status",
+    "etats": {
+      "EN_ATTENTE": "To be paid",
+      "BLOQUE": "Blocked: payment details",
+      "VERSE": "Paid"
+    },
+    "brouillon": "provisional",
+    "paiement": "Payment details",
+    "paiementAide": "Needed to receive your payments. They are checked by the administration; any change requires a new check.",
+    "paiementValide": "Details verified.",
+    "paiementAttente": "Awaiting verification by the administration.",
+    "paiementAbsent": "No details recorded: your shares are blocked.",
+    "reserveChef": "Only the team lead can edit these details.",
+    "statutJuridique": "Status",
+    "statuts": {
+      "PARTICULIER": "Individual",
+      "AUTO_ENTREPRENEUR": "Sole trader (micro-entreprise)",
+      "SOCIETE": "Company",
+      "ASSOCIATION": "Non-profit",
+      "AUTRE": "Other"
+    },
+    "raisonSociale": "Company name (optional)",
+    "siret": "SIRET (14 digits)",
+    "titulaire": "Account holder",
+    "iban": "IBAN",
+    "ibanAide": "Stored encrypted. Leave empty to keep the IBAN already on file.",
+    "ibanEnregistre": "An IBAN is on file.",
+    "bic": "BIC (optional)",
+    "adresse": "Postal address",
+    "enregistrer": "Save",
+    "enregistre": "Details saved. They will be verified.",
+    "erreursPaiement": {
+      "IBAN_INVALIDE": "This IBAN is not valid.",
+      "SIRET_REQUIS": "Enter a 14-digit SIRET.",
+      "DONNEES_INVALIDES": "Some fields are missing.",
+      "INTERDIT": "Only the team lead can edit these details.",
+      "DEFAUT": "Saving failed."
+    }
   }
 }

@@ -35,6 +35,10 @@ export const routing = defineRouting({
     "/admin/invitations": "/admin/invitations",
     "/admin/retraits": "/admin/retraits",
     "/admin/bots": "/admin/bots",
+    "/admin/publicite": "/admin/publicite",
+    "/admin/revenus": "/admin/revenus",
+    "/equipe/statistiques": { fr: "/equipe/statistiques", en: "/team/stats" },
+    "/equipe/revenus": { fr: "/equipe/revenus", en: "/team/revenue" },
     "/moderation": "/moderation",
   },
 });

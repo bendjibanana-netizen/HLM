@@ -22,6 +22,8 @@ export default async function PageAdmin() {
     { chemin: "/moderation", titre: t("moderation"), aide: t("moderationAide"), compteur: seriesEnAttente + signalements },
     { chemin: "/admin/retraits", titre: t("retraits"), aide: t("retraitsAide"), compteur: retraits },
     { chemin: "/admin/bots", titre: t("bots"), aide: t("botsAide") },
+    { chemin: "/admin/publicite", titre: t("publicite"), aide: t("publiciteAide") },
+    { chemin: "/admin/revenus", titre: t("revenus"), aide: t("revenusAide") },
   ];
 
   return (

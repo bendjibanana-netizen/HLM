@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { cleVariante, urlImage } from "@/lib/images/variantes";
 import { obtenirSession } from "@/lib/session";
 import { peutPrevisualiser } from "@/server/acces";
+import { EmplacementPub } from "@/components/pub/emplacement";
 import { ActionsSerie } from "@/components/communaute/actions-serie";
 import { Critiques } from "@/components/communaute/critiques";
 import { Signalement } from "@/components/communaute/signalement";
@@ -176,6 +177,7 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
       {!enApercu && (
         <>
           <Critiques serieId={serie.id} critiques={critiques} maCritique={etat?.critique ?? null} connecte={Boolean(session)} />
+          <EmplacementPub cle="serie-bas-de-page" />
           <div className="flex justify-end border-t border-bordure pt-2">
             <Signalement cible="SERIE" id={serie.id} />
           </div>

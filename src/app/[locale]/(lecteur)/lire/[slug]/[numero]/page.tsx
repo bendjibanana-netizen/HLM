@@ -9,6 +9,8 @@ import { db } from "@/lib/db";
 import { srcset, urlImage, varianteProche, type Variante } from "@/lib/images/variantes";
 import { obtenirSession } from "@/lib/session";
 import { peutPrevisualiser } from "@/server/acces";
+import { emplacementActif } from "@/components/pub/emplacement";
+import { creerJetonVue } from "@/lib/vues";
 import { chapitrePourLecture } from "@/server/catalogue";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/lire/[slug]/[numero]">): Promise<Metadata> {
@@ -62,6 +64,10 @@ export default async function PageLecture({ params }: PageProps<"/[locale]/lire/
     };
   });
 
+  const publie = chapitre.statut === "PUBLIE";
+  const emplacement = publie ? await emplacementActif("lecteur-fin-chapitre") : null;
+  const tPub = await getTranslations("Pub");
+
   const lecteur = (
     <Lecteur
       // La clé force un état neuf à chaque changement de chapitre.
@@ -79,6 +85,8 @@ export default async function PageLecture({ params }: PageProps<"/[locale]/lire/
       })}
       positionServeur={progression?.chapitreId === chapitre.id ? { page: progression.page, ratio: progression.ratio } : null}
       connecte={Boolean(session)}
+      jetonVue={publie ? creerJetonVue(chapitre.id) : null}
+      pub={emplacement ? { ...emplacement, libelle: tPub("libelle") } : null}
     />
   );
 

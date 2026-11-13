@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FormulaireFiltres } from "@/components/catalogue/formulaire-filtres";
 import { PanneauFiltres } from "@/components/catalogue/panneau-filtres";
 import { CarteSerie } from "@/components/serie/carte-serie";
+import { EmplacementPub } from "@/components/pub/emplacement";
 import { classesBouton } from "@/components/ui/bouton";
 import { EtatVide } from "@/components/ui/etat-vide";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -116,6 +117,7 @@ export default async function PageCatalogue({ params, searchParams }: PageProps<
             )}
           </>
         )}
+        <EmplacementPub cle="catalogue-bas" />
       </div>
     </div>
   );

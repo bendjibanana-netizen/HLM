@@ -4,6 +4,7 @@ import { Carrousel } from "@/components/accueil/carrousel";
 import { RangeeSeries } from "@/components/accueil/rangee-series";
 import { ReprendreLecture } from "@/components/accueil/reprendre-lecture";
 import { SortiesSemaine } from "@/components/accueil/sorties-semaine";
+import { EmplacementPub } from "@/components/pub/emplacement";
 import { EtatVide } from "@/components/ui/etat-vide";
 import { misesEnAvant, seriesMieuxNotees, seriesNouveautes, seriesTendances, sortiesDeLaSemaine } from "@/server/catalogue";
 
@@ -38,6 +39,7 @@ export default async function PageAccueil({ params }: PageProps<"/[locale]">) {
       <Carrousel vedettes={vedettes} />
       <ReprendreLecture />
       <SortiesSemaine sorties={sorties} />
+      <EmplacementPub cle="accueil-milieu" />
       <RangeeSeries titre={t("tendances")} series={tendances} tri="tendances" />
       <RangeeSeries titre={t("nouveautes")} series={nouveautes} tri="recent" />
       <RangeeSeries titre={t("mieuxNotees")} series={mieuxNotees} tri="note" />

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as EvenementPointeur } from "react";
 import { Commentaires } from "@/components/communaute/commentaires";
 import { Signalement } from "@/components/communaute/signalement";
+import { Pub } from "@/components/pub/pub";
 import { Bouton, LienBouton } from "@/components/ui/bouton";
 import { Feuille } from "@/components/ui/feuille";
 import { Segments } from "@/components/ui/segments";
@@ -37,6 +38,10 @@ type Proprietes = {
   /** Position enregistrée sur le compte, si ce chapitre est celui en cours. */
   positionServeur: { page: number; ratio: number } | null;
   connecte: boolean;
+  /** Jeton signé permettant de compter la vue ; absent en aperçu. */
+  jetonVue: string | null;
+  /** Publicité de fin de chapitre, si l'emplacement est actif. */
+  pub: { code: string | null; libelle: string; mobile: boolean; bureau: boolean } | null;
 };
 
 const MODES = ["vertical", "pages"] as const;
@@ -84,7 +89,7 @@ const abonnerPleinEcran = (rappel: () => void) => {
   return () => document.removeEventListener("fullscreenchange", rappel);
 };
 
-export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, precedent, suivant, debutSuivant, positionServeur, connecte }: Proprietes) {
+export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, precedent, suivant, debutSuivant, positionServeur, connecte, jetonVue, pub }: Proprietes) {
   const t = useTranslations("Lecteur");
   const total = pages.length;
 
@@ -105,6 +110,17 @@ export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, prec
   const position = useRef<Position>({ numero, page: positionServeur?.page ?? 0, ratio: positionServeur?.ratio ?? 0 });
   const barre = useRef<HTMLSpanElement>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // ── Comptage de la vue ──
+  // Envoyée une seule fois, après huit secondes de présence : ouvrir un chapitre sans le lire ne compte pas.
+  useEffect(() => {
+    if (!chapitreId || !jetonVue) return;
+    const minuterie = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
+      void fetch("/api/vues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chapitreId, jeton: jetonVue }), keepalive: true }).catch(() => {});
+    }, 8000);
+    return () => clearTimeout(minuterie);
+  }, [chapitreId, jetonVue]);
 
   // ── Mémorisation de la position ──
   const enregistrer = useCallback(
@@ -278,6 +294,8 @@ export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, prec
   const finDeChapitre = (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 px-4 py-12 text-center">
       <p className="font-titre text-2xl font-extrabold">{t("fin", { numero })}</p>
+      {/* Publicité entre deux chapitres : après la dernière planche, jamais au milieu. */}
+      {pub && <Pub {...pub} />}
       {suivant ? (
         <LienBouton href={lienChapitre(suivant)} taille="lg" pleineLargeur>
           {t("suivant")} · {suivant}

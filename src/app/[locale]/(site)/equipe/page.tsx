@@ -27,6 +27,7 @@ export default async function PageEquipe() {
 
   const t = await getTranslations("Equipe");
   const tSerie = await getTranslations("Serie");
+  const tStats = await getTranslations("Stats");
   const format = await getFormatter();
   const equipes = await db.equipe.findMany({
     where: { id: { in: appartenances.map(({ equipe }) => equipe.id) } },
@@ -47,6 +48,14 @@ export default async function PageEquipe() {
           <section key={equipe.id} className="flex flex-col gap-4">
             <h2 className="text-2xl font-bold">{equipe.nom}</h2>
             {equipe.statut === "SUSPENDUE" && <Message ton="erreur">{t("suspendue")}</Message>}
+            <div className="flex flex-wrap gap-2">
+              <LienBouton href={{ pathname: "/equipe/statistiques", query: { equipe: equipe.id } }} variante="secondaire" taille="sm">
+                {tStats("statistiques")}
+              </LienBouton>
+              <LienBouton href={{ pathname: "/equipe/revenus", query: { equipe: equipe.id } }} variante="secondaire" taille="sm">
+                {tStats("revenus")}
+              </LienBouton>
+            </div>
 
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold">{t("series")}</h3>
