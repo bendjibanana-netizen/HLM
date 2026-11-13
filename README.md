@@ -3,7 +3,7 @@
 Plateforme web de lecture de BD numériques, publiées par des équipes et des auteurs invités,
 avec une dimension communautaire (notes, critiques, listes). Mobile d'abord.
 
-**État : phases 1 et 2 terminées** (socle, catalogue, recherche et lecteur). L'espace équipe arrive en phase 3.
+**État : phases 1 à 3 terminées** (socle, catalogue, recherche, lecteur, espace équipe).
 
 ## Démarrer en local
 
@@ -29,8 +29,9 @@ npm run db:seed
 # 5. Séries de démonstration (facultatif, environ 5 minutes : génère et encode 236 planches)
 npm run db:demo
 
-# 6. Lancer le site
+# 6. Lancer le site, et dans un second terminal le worker (traitement des chapitres, publications programmées)
 npm run dev
+npm run worker
 ```
 
 Le site est sur http://localhost:3000.
@@ -42,7 +43,7 @@ Le site est sur http://localhost:3000.
 | Stockage (console) | http://localhost:9001 | Images, compatible S3 |
 | Meilisearch | http://localhost:7700 | Recherche instantanée |
 | Postgres | localhost:5432 | Base de données (`hlm` / `hlm`) |
-| Redis | localhost:6379 | Files d'attente et vues — utilisé à partir de la phase 3 |
+| Redis | localhost:6379 | Files d'attente du worker |
 
 ## Commandes
 
@@ -50,6 +51,8 @@ Le site est sur http://localhost:3000.
 |---|---|
 | `npm run dev` | Serveur de développement |
 | `npm run build` puis `npm start` | Version de production |
+| `npm run worker` | Processus d'arrière-plan : traitement des planches, publications programmées |
+| `npm run stockage:init` | Crée le bucket local et règle les dossiers publics |
 | `npm run lint` | Vérification du style de code |
 | `npm run typecheck` | Vérification des types |
 | `npm test` | Tests unitaires |
@@ -80,7 +83,8 @@ src/app/api/auth/     Point d'entrée de l'authentification
 src/components/ui/    Design system (boutons, champs, badges, étoiles, panneau modal…)
 src/components/       Mise en page et formulaires
 src/lib/              Base de données, authentification, emails, stockage, images, recherche
-src/server/           Requêtes du catalogue
+src/server/           Requêtes, contrôles d'accès et actions serveur
+worker/               Processus d'arrière-plan (files d'attente BullMQ)
 src/i18n/             Langues et adresses traduites
 tests/                Tests unitaires
 ```

@@ -10,6 +10,9 @@ import { Carte } from "@/components/ui/carte";
 import { getPathname } from "@/i18n/navigation";
 import type { RoleGlobal } from "@/lib/permissions";
 import { exigerConnexion } from "@/lib/session";
+import { equipesDe } from "@/server/acces";
+import { LienBouton } from "@/components/ui/bouton";
+import { aAuMoinsLeRole } from "@/lib/permissions";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/compte">): Promise<Metadata> {
   const { locale } = await params;
@@ -24,6 +27,8 @@ export default async function PageCompte() {
   const tAuth = await getTranslations("Auth");
   const format = await getFormatter();
   const role = compte.role as RoleGlobal;
+  const tNav = await getTranslations("Navigation");
+  const dansUneEquipe = (await equipesDe(compte.id)).length > 0;
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-6">
@@ -58,6 +63,14 @@ export default async function PageCompte() {
           {t("membreDepuis", { date: format.dateTime(compte.createdAt, { dateStyle: "long" }) })}
         </p>
       </Carte>
+
+      {(dansUneEquipe || aAuMoinsLeRole(role, "MODERATEUR")) && (
+        <div className="flex flex-wrap gap-2">
+          {dansUneEquipe && <LienBouton href="/equipe" variante="secondaire">{tNav("equipe")}</LienBouton>}
+          {role === "ADMIN" && <LienBouton href="/admin" variante="secondaire">{tNav("admin")}</LienBouton>}
+          {role === "MODERATEUR" && <LienBouton href="/moderation" variante="secondaire">Modération</LienBouton>}
+        </div>
+      )}
 
       {!compte.emailVerified && (
         <Carte className="flex flex-col gap-3">

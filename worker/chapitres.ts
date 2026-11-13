@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { decouperPlanche } from "@/lib/images/decoupage";
 import { traiterPage } from "@/lib/images/traitement";
-import { lireFichier } from "@/lib/stockage";
+import { lireFichier, supprimerPrefixe } from "@/lib/stockage";
 import { publierChapitre } from "@/server/publication";
 
 export async function traiterChapitre(chapitreId: string): Promise<{ planches: number; statut: string }> {
@@ -30,6 +30,9 @@ export async function traiterChapitre(chapitreId: string): Promise<{ planches: n
     db.page.createMany({ data: traitees.map((page, ordre) => ({ chapitreId, ordre, ...page })) }),
     db.chapitre.update({ where: { id: chapitreId }, data: { nbPages: traitees.length } }),
   ]);
+
+  // Les fichiers d'origine ne servent plus : seules les déclinaisons sont conservées.
+  await supprimerPrefixe(`prive/chapitres/${chapitreId}/`).catch((erreur) => console.error("[stockage] originaux non supprimés :", erreur));
 
   // Suite demandée par l'équipe à l'envoi : rien = brouillon, date passée = publier, date future = programmer.
   let statut = "BROUILLON";

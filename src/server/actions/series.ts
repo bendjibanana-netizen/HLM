@@ -37,6 +37,14 @@ async function slugLibre(titre: string, sauf?: string): Promise<string> {
   }
 }
 
+/** Champs simples de la série, sans les listes (genres, auteurs) enregistrées dans des tables liées. */
+function champsSimples(donnees: z.output<typeof schemaSerie>) {
+  const champs: Partial<z.output<typeof schemaSerie>> = { ...donnees };
+  delete champs.genres;
+  delete champs.auteurs;
+  return champs as Omit<z.output<typeof schemaSerie>, "genres" | "auteurs">;
+}
+
 function relations(donnees: z.output<typeof schemaSerie>) {
   return {
     genres: { create: donnees.genres.map((slug) => ({ genre: { connect: { slug } } })) },
@@ -54,7 +62,7 @@ export async function creerSerie(equipeId: string, donnees: DonneesSerie): Promi
   if (!acces) return refus("INTERDIT");
   const valide = schemaSerie.safeParse(donnees);
   if (!valide.success) return refus(valide.error.issues.some((p) => p.path[0] === "droitsDeclares") ? "DROITS_REQUIS" : "DONNEES_INVALIDES");
-  const { genres: _g, auteurs: _a, ...champs } = valide.data;
+  const champs = champsSimples(valide.data);
 
   const serie = await db.serie.create({
     data: {
@@ -76,7 +84,7 @@ export async function modifierSerie(serieId: string, donnees: DonneesSerie): Pro
   if (!acces) return refus("INTERDIT");
   const valide = schemaSerie.safeParse(donnees);
   if (!valide.success) return refus(valide.error.issues.some((p) => p.path[0] === "droitsDeclares") ? "DROITS_REQUIS" : "DONNEES_INVALIDES");
-  const { genres: _g, auteurs: _a, ...champs } = valide.data;
+  const champs = champsSimples(valide.data);
 
   await db.$transaction([
     db.serieGenre.deleteMany({ where: { serieId } }),
