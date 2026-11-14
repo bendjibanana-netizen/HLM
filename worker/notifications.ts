@@ -1,6 +1,7 @@
 // Annonce d'un nouveau chapitre aux lecteurs qui suivent la série : sur le site, en push et par email,
 // selon les préférences de chacun.
-import { createTranslator } from "next-intl";
+// Version sans React de la bibliothèque de traduction : le worker n'est pas une application React.
+import { createTranslator } from "use-intl/core";
 import en from "../messages/en.json";
 import fr from "../messages/fr.json";
 import { db } from "@/lib/db";

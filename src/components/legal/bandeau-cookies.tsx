@@ -37,7 +37,10 @@ function enregistrer(choix: Consentement) {
  */
 export function BandeauCookies() {
   const t = useTranslations("Cookies");
-  const consentement = useConsentement();
+  // Côté serveur, on suppose qu'aucun choix n'a été fait : le bandeau fait partie de la page servie
+  // (il s'affiche sans attendre le JavaScript). Si un choix existe, un script en tête de page le masque avant tout affichage.
+  const brut = useSyncExternalStore<string | null>(abonner, cookieBrut, () => null);
+  const consentement = lireConsentement(brut);
   const [rouvert, setRouvert] = useState(false);
   const [detail, setDetail] = useState(false);
   const [choix, setChoix] = useState<Consentement>({ mesure: false, publicite: false });
@@ -53,8 +56,8 @@ export function BandeauCookies() {
   }, []);
   useSyncExternalStore(surOuverture, () => rouvert, () => false);
 
-  // Rien à afficher côté serveur, ni une fois le choix fait (sauf réouverture volontaire).
-  if (consentement === undefined || (consentement !== null && !rouvert)) return null;
+  // Rien à afficher une fois le choix fait (sauf réouverture volontaire).
+  if (consentement !== null && !rouvert) return null;
 
   const valider = (valeur: Consentement) => {
     enregistrer(valeur);
@@ -63,7 +66,7 @@ export function BandeauCookies() {
   };
 
   return (
-    <div role="dialog" aria-label={t("titre")} className="pb-nav-securite fixed inset-x-0 bottom-0 z-50 md:pb-0">
+    <div role="dialog" aria-label={t("titre")} data-bandeau-cookies={rouvert ? "rouvert" : ""} className="pb-nav-securite fixed inset-x-0 bottom-0 z-50 md:pb-0">
       <div className="mx-auto flex max-w-2xl flex-col gap-3 rounded-t-2xl border border-bordure bg-surface p-4 shadow-2xl md:mb-4 md:rounded-2xl">
         <p className="font-titre text-lg font-bold">{t("titre")}</p>
         <p className="text-sm text-texte-doux">

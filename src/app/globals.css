@@ -145,6 +145,11 @@
   padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
 }
 
+/* Bandeau cookies : masqué dès le chargement si le visiteur a déjà choisi (sauf s'il le rouvre lui-même) */
+html[data-consentement] [data-bandeau-cookies=""] {
+  display: none;
+}
+
 /* Respecte le réglage « réduire les animations » du système */
 @media (prefers-reduced-motion: reduce) {
   *,

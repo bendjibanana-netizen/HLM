@@ -1,8 +1,12 @@
 // Notifications push (Web Push, protocole VAPID). Facultatives : sans clés configurées, rien n'est envoyé.
 import "server-only";
-import webpush from "web-push";
+import * as modulePush from "web-push";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+
+// La bibliothèque est au format CommonJS : selon le chargeur (Next.js ou le worker), ses fonctions
+// se trouvent sur le module lui-même ou sur son export par défaut.
+const webpush = ((modulePush as unknown as { default?: typeof modulePush }).default ?? modulePush) as typeof modulePush;
 
 export const pushConfigure = Boolean(env.NEXT_PUBLIC_VAPID_CLE_PUBLIQUE && env.VAPID_CLE_PRIVEE);
 if (pushConfigure) webpush.setVapidDetails(env.APP_URL, env.NEXT_PUBLIC_VAPID_CLE_PUBLIQUE!, env.VAPID_CLE_PRIVEE!);

@@ -9,6 +9,7 @@ import { SelecteurTheme } from "./selecteur-theme";
 /** Pied de page : liens légaux et réglages d'affichage. */
 export async function PiedDePage() {
   const t = await getTranslations("Pied");
+  const tNav = await getTranslations("Navigation");
 
   return (
     <footer className="mt-16 border-t border-bordure">
@@ -21,6 +22,7 @@ export async function PiedDePage() {
             <Link href="/mentions-legales" className="hover:text-texte hover:underline">{t("mentions")}</Link>
             <Link href="/confidentialite" className="hover:text-texte hover:underline">{t("confidentialite")}</Link>
             <Link href="/retrait" className="hover:text-texte hover:underline">{t("retrait")}</Link>
+            <Link href="/hors-ligne" className="hover:text-texte hover:underline">{tNav("horsLigne")}</Link>
             <LienCookies>{t("cookies")}</LienCookies>
           </nav>
         </div>

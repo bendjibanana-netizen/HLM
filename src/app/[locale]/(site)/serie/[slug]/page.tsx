@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/serie/[s
   return {
     title: serie.titre,
     description,
+    alternates: { canonical: (await params).locale === "en" ? `/en/series/${slug}` : `/serie/${slug}`, languages: { fr: `/serie/${slug}`, en: `/en/series/${slug}` } },
     openGraph: {
       title: serie.titre,
       description,
@@ -75,8 +76,25 @@ export default async function PageSerie({ params }: PageProps<"/[locale]/serie/[
     ...(serie.titresAlternatifs.length ? [{ libelle: t("Serie.titresAlternatifs"), valeur: serie.titresAlternatifs.join(" · ") }] : []),
   ];
 
+  // Données structurées (schema.org) : les moteurs de recherche affichent auteur, genre et note.
+  const donneesStructurees = {
+    "@context": "https://schema.org",
+    "@type": "ComicSeries",
+    name: serie.titre,
+    alternateName: serie.titresAlternatifs,
+    description: serie.synopsis,
+    inLanguage: serie.langue.toLowerCase(),
+    genre: serie.genres.map(({ genre }) => (locale === "en" ? genre.nomEn : genre.nomFr)),
+    author: serie.auteurs.map(({ auteur }) => ({ "@type": "Person", name: auteur.nom })),
+    publisher: { "@type": "Organization", name: serie.equipe.nom },
+    image: serie.couvertureCle ? urlImage(cleVariante(serie.couvertureCle, 720, "webp")) : undefined,
+    ...(serie.nbNotes > 0 && { aggregateRating: { "@type": "AggregateRating", ratingValue: Math.round(serie.noteMoyenne * 5) / 10, bestRating: 5, worstRating: 0.5, ratingCount: serie.nbNotes } }),
+  };
+
   const contenu = (
     <article className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-5">
+      {/* « < » est échappé : un titre ou un synopsis ne peut pas refermer la balise script. */}
+      {!enApercu && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }} />}
       {enApercu && <Message>{t("Equipe.apercuBandeau")}</Message>}
       <header className="flex gap-4">
         <div className="w-28 shrink-0 sm:w-44">

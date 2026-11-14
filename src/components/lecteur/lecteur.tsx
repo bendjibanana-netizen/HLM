@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type Po
 import { Commentaires } from "@/components/communaute/commentaires";
 import { Signalement } from "@/components/communaute/signalement";
 import { Pub } from "@/components/pub/pub";
+import { BoutonTelechargement } from "@/components/pwa/bouton-telechargement";
 import { Bouton, LienBouton } from "@/components/ui/bouton";
 import { Feuille } from "@/components/ui/feuille";
 import { Segments } from "@/components/ui/segments";
@@ -62,7 +63,7 @@ function lirePositionLocale(slug: string, numero: string): Position | null {
 }
 
 /** Une planche : la place est réservée d'avance (pas de saut à l'arrivée de l'image) et l'aperçu flou sert de fond. */
-function Planche({ page, sizes, prioritaire, alt, className }: { page: PageLecteur; sizes: string; prioritaire: boolean; alt: string; className?: string }) {
+function Planche({ page, sizes, prioritaire, urgente = false, alt, className }: { page: PageLecteur; sizes: string; prioritaire: boolean; urgente?: boolean; alt: string; className?: string }) {
   return (
     <picture>
       <source type="image/avif" srcSet={page.avif} sizes={sizes} />
@@ -74,7 +75,8 @@ function Planche({ page, sizes, prioritaire, alt, className }: { page: PageLecte
         width={page.largeur}
         height={page.hauteur}
         loading={prioritaire ? "eager" : "lazy"}
-        fetchPriority={prioritaire ? "high" : undefined}
+        // Une seule image en priorité haute : la première planche ne partage pas la bande passante.
+        fetchPriority={urgente ? "high" : undefined}
         decoding="async"
         draggable={false}
         className={className}
@@ -350,7 +352,7 @@ export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, prec
           <div className={cn("mx-auto flex w-full flex-col", CLASSE_LARGEUR[largeur])}>
             {pages.map((page, i) => (
               <div key={page.id} data-page={i} style={{ aspectRatio: `${page.largeur} / ${page.hauteur}` }}>
-                <Planche page={page} sizes={sizesVertical} prioritaire={i < 2} alt={t("planche", { page: i + 1 })} className="size-full select-none" />
+                <Planche page={page} sizes={sizesVertical} prioritaire={i < 2} urgente={i === 0} alt={t("planche", { page: i + 1 })} className="size-full select-none" />
               </div>
             ))}
           </div>
@@ -367,7 +369,7 @@ export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, prec
             pages.map((page, i) =>
               Math.abs(i - index) <= 1 || i === index + 2 ? (
                 <div key={page.id} className={cn("absolute inset-0 flex items-center justify-center", i !== index && "invisible")}>
-                  <Planche page={page} sizes={sizesPages} prioritaire alt={t("planche", { page: i + 1 })} className="max-h-full max-w-full object-contain" />
+                  <Planche page={page} sizes={sizesPages} prioritaire urgente={i === index} alt={t("planche", { page: i + 1 })} className="max-h-full max-w-full object-contain" />
                 </div>
               ) : null,
             )
@@ -479,6 +481,8 @@ export function Lecteur({ serie, numero, chapitreId, nbCommentaires, pages, prec
               {pleinEcran ? t("quitterPleinEcran") : t("pleinEcran")}
             </Bouton>
           )}
+          {/* Hors-ligne : la déclinaison de largeur moyenne de chaque planche, lisible sur téléphone comme sur tablette. */}
+          <BoutonTelechargement serie={serie.titre} numero={numero} images={pages.map((page) => page.src)} />
           {mode === "pages" && <p className="text-sm text-texte-doux">{t("aide")}</p>}
         </div>
       </Feuille>

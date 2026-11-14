@@ -1,7 +1,7 @@
 // Modèles des emails transactionnels. Les textes viennent des fichiers de traduction
 // (messages/fr.json et messages/en.json, section « Emails »).
 import "server-only";
-import { createTranslator } from "next-intl";
+import { createTranslator } from "use-intl/core";
 import en from "../../../messages/en.json";
 import fr from "../../../messages/fr.json";
 import { NOM_SITE } from "@/lib/site";

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BandeauCookies } from "@/components/legal/bandeau-cookies";
+import { EnregistrementServiceWorker } from "@/components/pwa/enregistrement";
 import { routing } from "@/i18n/routing";
 import { NOM_SITE } from "@/lib/site";
 import "../globals.css";
@@ -16,7 +17,10 @@ const policeTitre = Bricolage_Grotesque({
 });
 
 // Applique le thème choisi par le lecteur avant le premier affichage, pour éviter un flash.
-const SCRIPT_THEME = `try{var t=localStorage.getItem("theme");if(t==="clair"||t==="sombre")document.documentElement.dataset.theme=t}catch(e){}`;
+// Signale aussi qu'un choix de cookies existe déjà, pour masquer le bandeau avant le premier affichage.
+const SCRIPT_THEME = `try{var t=localStorage.getItem("theme");if(t==="clair"||t==="sombre")document.documentElement.dataset.theme=t}catch(e){}if(/(^|; )consentement=v1/.test(document.cookie))document.documentElement.dataset.consentement="fait"`;
+
+const ORIGINE_IMAGES = new URL(process.env.NEXT_PUBLIC_URL_IMAGES || "http://localhost:9000/hlm").origin;
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -31,6 +35,11 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
     title: { default: t("titre", { site: NOM_SITE }), template: `%s — ${NOM_SITE}` },
     description: t("description"),
     applicationName: NOM_SITE,
+    icons: { icon: "/icones/icone-192.png", apple: "/icones/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: NOM_SITE, statusBarStyle: "black-translucent" },
+    openGraph: { siteName: NOM_SITE, type: "website", locale: locale === "en" ? "en_US" : "fr_FR" },
+    // Chaque page indique son équivalent dans l'autre langue aux moteurs de recherche.
+    alternates: { languages: { fr: "/", en: "/en" } },
   };
 }
 
@@ -57,11 +66,14 @@ export default async function MiseEnPageRacine({ children, params }: LayoutProps
     <html lang={locale} className={policeTitre.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
+        {/* Ouvre d'avance la connexion vers le domaine des images (CDN) : la première image arrive plus tôt. */}
+        <link rel="preconnect" href={ORIGINE_IMAGES} crossOrigin="anonymous" />
       </head>
       <body className="flex min-h-dvh flex-col">
         <NextIntlClientProvider>
           {children}
           <BandeauCookies />
+          <EnregistrementServiceWorker />
         </NextIntlClientProvider>
       </body>
     </html>
