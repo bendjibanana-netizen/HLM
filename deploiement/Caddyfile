@@ -1,0 +1,36 @@
+# Caddy : HTTPS automatique (Let's Encrypt) et répartition du trafic.
+{
+	email {$EMAIL_CERTIFICATS}
+}
+
+# Le site
+{$DOMAINE} {
+	encode zstd gzip
+	reverse_proxy site:3000
+
+	header {
+		# Navigateurs : toujours en HTTPS, pas d'intégration du site dans une autre page, pas de devinette de type de fichier.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# Les images (stockage local). Seule la lecture est permise de l'extérieur ;
+# les dossiers privés restent protégés par le stockage lui-même.
+images.{$DOMAINE} {
+	encode zstd gzip
+	@lecture method GET HEAD
+	handle @lecture {
+		reverse_proxy stockage:9000
+	}
+	handle {
+		respond 405
+	}
+	header {
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+}

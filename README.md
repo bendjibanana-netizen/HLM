@@ -3,7 +3,7 @@
 Plateforme web de lecture de BD numériques, publiées par des équipes et des auteurs invités,
 avec une dimension communautaire (notes, critiques, listes). Mobile d'abord.
 
-**État : phases 1 à 6 terminées** (socle, catalogue, recherche, lecteur, espace équipe, communauté, modération, pages légales, robots de synchronisation, publicité et revenus).
+**État : les sept phases sont terminées.** Pour mettre le site en ligne, suivez le [guide d'installation sur serveur Linux](docs/deploiement.md).
 
 ## Démarrer en local
 
@@ -99,6 +99,13 @@ servis directement par le stockage (un CDN en production), avec un cache d'un an
 
 Les données de démonstration sont entièrement inventées et leurs images sont dessinées par code
 (`prisma/demo/`).
+
+## Application installable et notifications
+
+Le site est une PWA : installable sur téléphone, avec lecture hors-ligne des chapitres téléchargés depuis
+les réglages du lecteur (`public/sw.js`). Quand un chapitre sort, les lecteurs qui suivent la série sont
+prévenus sur le site, en push et par email selon leurs préférences (`worker/notifications.ts`).
+Le push demande une paire de clés VAPID (voir `.env.example`).
 
 ## Vues, publicité et revenus
 
